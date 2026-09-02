@@ -132,6 +132,16 @@ public class SoftwareEngine : ISoftwareCatalogService
         return false;
     }
 
+    public async Task<HashSet<string>> GetInstalledPackageIdsAsync()
+    {
+        var wingetInstaller = _installers.OfType<UniFAP.LabManager.Services.Software.Installers.WingetInstaller>().FirstOrDefault();
+        if (wingetInstaller != null)
+        {
+            return await wingetInstaller.GetInstalledPackageIdsAsync();
+        }
+        return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    }
+
     private ISoftwareInstaller? FindInstaller(SoftwareItem software)
     {
         return _installers.FirstOrDefault(i => i.CanHandle(software));

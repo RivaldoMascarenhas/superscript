@@ -99,6 +99,7 @@ public interface ISoftwareService
     Task<bool> IsInstalledAsync(SoftwareItem software);
     Task<bool> UninstallAsync(SoftwareItem software, bool dryRun = false);
     Task<bool> RepairAsync(SoftwareItem software, bool dryRun = false);
+    Task<HashSet<string>> GetInstalledPackageIdsAsync();
 }
 
 public class SoftwareInstallResult
@@ -115,6 +116,7 @@ public interface IWingetService
     Task<bool> IsAvailableAsync();
     Task<SoftwareInstallResult> InstallPackageAsync(string packageId, bool silent = true, Action<string>? progressCallback = null, CancellationToken cancellationToken = default);
     Task<bool> IsPackageInstalledAsync(string packageId);
+    Task<HashSet<string>> GetInstalledPackageIdsAsync();
     Task<List<string>> SearchPackagesAsync(string query);
 }
 
@@ -138,6 +140,9 @@ public interface IPerformanceService
 {
     Task<bool> ApplyPerformanceTweaksAsync(bool dryRun = false);
     Task<bool> RollbackPerformanceTweaksAsync();
+    Task<string> CleanTemporaryFilesAsync(bool dryRun = false);
+    Task<bool> OptimizeBrowsersAsync(bool dryRun = false);
+    Task<bool> ConfigureDnsAsync(string primaryDns, string? secondaryDns = null, bool useDhcp = false);
 }
 
 public interface IBrandingService

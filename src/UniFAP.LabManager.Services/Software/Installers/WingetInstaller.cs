@@ -109,4 +109,9 @@ public class WingetInstaller : ISoftwareInstaller
         var res = await _processRunner.RunAsync("winget.exe", args);
         return res.Success;
     }
+
+    public Task<HashSet<string>> GetInstalledPackageIdsAsync()
+    {
+        return _wingetService.GetInstalledPackageIdsAsync();
+    }
 }

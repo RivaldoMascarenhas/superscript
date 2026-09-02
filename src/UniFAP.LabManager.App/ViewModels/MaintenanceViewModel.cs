@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Windows.Input;
 using UniFAP.LabManager.Core.Interfaces;
 
@@ -37,12 +38,31 @@ public class MaintenanceViewModel : ViewModelBase
 
     public event Func<Task<(bool success, string password)>>? OnPromptSupportPassword;
 
+    public ObservableCollection<DnsOption> DnsOptions { get; } = new()
+    {
+        new DnsOption { DisplayName = "⚡ Cloudflare (1.1.1.1 / 1.0.0.1)", PrimaryDns = "1.1.1.1", SecondaryDns = "1.0.0.1" },
+        new DnsOption { DisplayName = "🌐 Google Public DNS (8.8.8.8 / 8.8.4.4)", PrimaryDns = "8.8.8.8", SecondaryDns = "8.8.4.4" },
+        new DnsOption { DisplayName = "🛡️ Quad9 Protegido (9.9.9.9 / 149.112.112.112)", PrimaryDns = "9.9.9.9", SecondaryDns = "149.112.112.112" },
+        new DnsOption { DisplayName = "🏛️ Intranet UniFAP (10.0.0.1 / 1.1.1.1)", PrimaryDns = "10.0.0.1", SecondaryDns = "1.1.1.1" },
+        new DnsOption { DisplayName = "🔄 DHCP Automático (Padrão do Roteador)", PrimaryDns = "", IsDhcp = true }
+    };
+
+    private DnsOption? _selectedDnsOption;
+    public DnsOption? SelectedDnsOption
+    {
+        get => _selectedDnsOption;
+        set => SetProperty(ref _selectedDnsOption, value);
+    }
+
     public ICommand ApplyWallpaperCommand { get; }
     public ICommand ApplyPerformanceCommand { get; }
     public ICommand RollbackPerformanceCommand { get; }
     public ICommand ProvisionUsersCommand { get; }
     public ICommand RepairWindowsCommand { get; }
     public ICommand ValidateDomainCommand { get; }
+    public ICommand CleanTempFilesCommand { get; }
+    public ICommand OptimizeBrowsersCommand { get; }
+    public ICommand ApplyDnsCommand { get; }
 
     public MaintenanceViewModel(
         IBrandingService brandingService,
@@ -61,12 +81,17 @@ public class MaintenanceViewModel : ViewModelBase
         _configService = configService;
         _logger = logger;
 
+        _selectedDnsOption = DnsOptions[0];
+
         ApplyWallpaperCommand = new AsyncRelayCommand(ApplyWallpaperAsync);
         ApplyPerformanceCommand = new AsyncRelayCommand(ApplyPerformanceAsync);
         RollbackPerformanceCommand = new AsyncRelayCommand(RollbackPerformanceAsync);
         ProvisionUsersCommand = new AsyncRelayCommand(ProvisionUsersAsync);
         RepairWindowsCommand = new AsyncRelayCommand(RepairWindowsAsync);
         ValidateDomainCommand = new AsyncRelayCommand(ValidateDomainAsync);
+        CleanTempFilesCommand = new AsyncRelayCommand(CleanTempFilesAsync);
+        OptimizeBrowsersCommand = new AsyncRelayCommand(OptimizeBrowsersAsync);
+        ApplyDnsCommand = new AsyncRelayCommand(ApplyDnsAsync);
     }
 
     private void AppendLog(string message)
@@ -211,4 +236,76 @@ public class MaintenanceViewModel : ViewModelBase
             IsExecuting = false;
         }
     }
+
+    private async Task CleanTempFilesAsync()
+    {
+        IsExecuting = true;
+        AppendLog("Iniciando limpeza de arquivos temporários (%TEMP%, Windows Temp, Prefetch e Lixeira)...");
+        try
+        {
+            string result = await _performanceService.CleanTemporaryFilesAsync(dryRun: false);
+            AppendLog($"✓ Limpeza concluída: {result}");
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"✗ Erro na limpeza: {ex.Message}");
+        }
+        finally
+        {
+            IsExecuting = false;
+        }
+    }
+
+    private async Task OptimizeBrowsersAsync()
+    {
+        IsExecuting = true;
+        AppendLog("Otimizando navegadores (Edge, Chrome, Firefox) e desativando inicialização em segundo plano...");
+        try
+        {
+            bool ok = await _performanceService.OptimizeBrowsersAsync(dryRun: false);
+            AppendLog(ok ? "✓ Navegadores otimizados! Startup Boost e caches redundantes desativados." : "⚠ Otimização concluída com avisos.");
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"✗ Erro ao otimizar navegadores: {ex.Message}");
+        }
+        finally
+        {
+            IsExecuting = false;
+        }
+    }
+
+    private async Task ApplyDnsAsync()
+    {
+        if (SelectedDnsOption == null) return;
+
+        IsExecuting = true;
+        AppendLog($"Configurando servidores DNS para: {SelectedDnsOption.DisplayName}...");
+        try
+        {
+            bool ok = await _performanceService.ConfigureDnsAsync(
+                SelectedDnsOption.PrimaryDns,
+                SelectedDnsOption.SecondaryDns,
+                SelectedDnsOption.IsDhcp);
+
+            AppendLog(ok ? $"✓ DNS configurado com sucesso para todos os adaptadores de rede ativos!" : "⚠ Falha ao aplicar servidores DNS.");
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"✗ Erro ao aplicar DNS: {ex.Message}");
+        }
+        finally
+        {
+            IsExecuting = false;
+        }
+    }
+}
+
+public class DnsOption
+{
+    public string DisplayName { get; set; } = string.Empty;
+    public string PrimaryDns { get; set; } = string.Empty;
+    public string? SecondaryDns { get; set; }
+    public bool IsDhcp { get; set; }
+    public override string ToString() => DisplayName;
 }

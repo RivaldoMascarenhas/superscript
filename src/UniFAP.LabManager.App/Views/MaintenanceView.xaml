@@ -69,6 +69,21 @@
                             <Button Grid.Column="1" Content="Restaurar" Command="{Binding RollbackPerformanceCommand}" Style="{StaticResource SecondaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
                         </Grid>
                     </Border>
+
+                    <!-- LIMPEZA DE DISCO E TEMPORÁRIOS -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="🧹 Limpeza de Disco &amp; Temporários" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Remove arquivos temporários (%TEMP%, Windows Temp, Prefetch, Lixeira e downloads)." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Limpar" Command="{Binding CleanTempFilesCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
                 </StackPanel>
 
                 <!-- COLUNA DIREITA -->
@@ -118,8 +133,40 @@
                             <Button Grid.Column="1" Content="Testar" Command="{Binding ValidateDomainCommand}" Style="{StaticResource SecondaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
                         </Grid>
                     </Border>
+
+                    <!-- OTIMIZAR NAVEGADORES -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="🌐 Otimizar Navegadores" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Limpa caches, desativa Startup Boost e processos em segundo plano no Edge, Chrome e Firefox." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Otimizar" Command="{Binding OptimizeBrowsersCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
                 </StackPanel>
             </Grid>
+
+            <!-- CONFIGURAR SERVIDORES DNS -->
+            <Border Style="{StaticResource CardPanel}" Margin="0,0,0,24">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                        <TextBlock Text="🌍 Configurar Servidores DNS" Style="{StaticResource CardTitle}" />
+                        <TextBlock Text="Altera os servidores DNS em todos os adaptadores de rede ativos para opções de alta performance ou institucionais." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding DnsOptions}" SelectedItem="{Binding SelectedDnsOption}" Width="320" VerticalAlignment="Center" Margin="0,0,12,0" />
+                    <Button Grid.Column="2" Content="Aplicar DNS" Command="{Binding ApplyDnsCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
 
             <!-- CONSOLE DE SAÍDA DAS FERRAMENTAS -->
             <Border Style="{StaticResource CardPanel}" Padding="16">

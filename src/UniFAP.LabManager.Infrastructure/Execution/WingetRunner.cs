@@ -101,6 +101,44 @@ public class WingetRunner : IWingetService
         }
     }
 
+    public async Task<HashSet<string>> GetInstalledPackageIdsAsync()
+    {
+        var installed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            var result = await _processRunner.RunAsync("winget.exe", "list --accept-source-agreements", null, 60);
+            if (result.Success && !string.IsNullOrWhiteSpace(result.StandardOutput))
+            {
+                var lines = result.StandardOutput.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                bool headerPassed = false;
+                foreach (var line in lines)
+                {
+                    if (line.StartsWith("---") || line.Contains("------"))
+                    {
+                        headerPassed = true;
+                        continue;
+                    }
+                    if (!headerPassed) continue;
+
+                    var parts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var part in parts)
+                    {
+                        if (part.Contains('.') || part.StartsWith("ARP\\") || part.StartsWith("MSIX\\"))
+                        {
+                            installed.Add(part.Trim());
+                        }
+                    }
+                    installed.Add(line);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("WingetRunner", $"Erro ao listar pacotes instalados: {ex.Message}");
+        }
+        return installed;
+    }
+
     public async Task<List<string>> SearchPackagesAsync(string query)
     {
         var packages = new List<string>();

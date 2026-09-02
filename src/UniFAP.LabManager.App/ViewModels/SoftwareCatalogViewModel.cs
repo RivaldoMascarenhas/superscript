@@ -56,6 +56,19 @@ public class SoftwareCatalogViewModel : ViewModelBase
         }
     }
 
+    private string _selectedStatusFilter = "Todos";
+    public string SelectedStatusFilter
+    {
+        get => _selectedStatusFilter;
+        set
+        {
+            if (SetProperty(ref _selectedStatusFilter, value))
+            {
+                FilterSoftware();
+            }
+        }
+    }
+
     public bool IsBusy
     {
         get => _isBusy;
@@ -72,11 +85,14 @@ public class SoftwareCatalogViewModel : ViewModelBase
 
     public ObservableCollection<string> Categories { get; } = new();
     public ObservableCollection<string> Sources { get; } = new() { "Todos", "UniFAP", "WinUtil" };
+    public ObservableCollection<string> StatusFilters { get; } = new() { "Todos", "Instalados", "Não Instalados" };
     public ObservableCollection<SoftwareItem> AllItems { get; } = new();
     public ObservableCollection<SoftwareItem> FilteredItems { get; } = new();
 
     public ICommand SelectCategoryCommand { get; }
     public ICommand SelectSourceCommand { get; }
+    public ICommand SelectStatusFilterCommand { get; }
+    public ICommand ScanInstalledPackagesCommand { get; }
     public ICommand InstallSingleSoftwareCommand { get; }
     public ICommand UninstallSingleSoftwareCommand { get; }
     public ICommand RepairSingleSoftwareCommand { get; }
@@ -107,6 +123,12 @@ public class SoftwareCatalogViewModel : ViewModelBase
             if (param is string src) SelectedSource = src;
         });
 
+        SelectStatusFilterCommand = new RelayCommand(param =>
+        {
+            if (param is string st) SelectedStatusFilter = st;
+        });
+
+        ScanInstalledPackagesCommand = new AsyncRelayCommand(ScanInstalledSoftwareAsync);
         InstallSingleSoftwareCommand = new AsyncRelayCommand(InstallSingleAsync);
         UninstallSingleSoftwareCommand = new AsyncRelayCommand(UninstallSingleAsync);
         RepairSingleSoftwareCommand = new AsyncRelayCommand(RepairSingleAsync);
@@ -143,6 +165,7 @@ public class SoftwareCatalogViewModel : ViewModelBase
             FilterSoftware();
             UpdateSelectedCount();
             OperationStatus = $"Catálogo carregado: {AllItems.Count} softwares disponíveis.";
+            _ = ScanInstalledSoftwareAsync();
         }
         catch (Exception ex)
         {
@@ -155,10 +178,51 @@ public class SoftwareCatalogViewModel : ViewModelBase
         }
     }
 
+    public async Task ScanInstalledSoftwareAsync()
+    {
+        try
+        {
+            OperationStatus = "Verificando softwares instalados no sistema...";
+            var installed = await _softwareService.GetInstalledPackageIdsAsync();
+            if (installed.Count > 0)
+            {
+                int foundCount = 0;
+                foreach (var sw in AllItems)
+                {
+                    if (!string.IsNullOrWhiteSpace(sw.WingetId))
+                    {
+                        bool isInst = installed.Contains(sw.WingetId) || 
+                                      installed.Any(line => line.Contains(sw.WingetId, StringComparison.OrdinalIgnoreCase));
+                        if (isInst)
+                        {
+                            sw.Status = SoftwareInstallStatus.Installed;
+                            foundCount++;
+                        }
+                    }
+                }
+                FilterSoftware();
+                OperationStatus = $"Catálogo carregado: {AllItems.Count} disponíveis ({foundCount} instalados neste computador).";
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("SoftwareCatalogViewModel", $"Erro ao verificar instalados: {ex.Message}");
+        }
+    }
+
     private void FilterSoftware()
     {
         FilteredItems.Clear();
         var items = AllItems.AsEnumerable();
+
+        if (SelectedStatusFilter == "Instalados")
+        {
+            items = items.Where(s => s.Status == SoftwareInstallStatus.Installed);
+        }
+        else if (SelectedStatusFilter == "Não Instalados")
+        {
+            items = items.Where(s => s.Status != SoftwareInstallStatus.Installed);
+        }
 
         if (SelectedCategory != "Todos")
         {
@@ -308,17 +372,42 @@ public class SoftwareCatalogViewModel : ViewModelBase
     {
         if (param is not SoftwareItem sw) return;
 
+        var confirm = System.Windows.MessageBox.Show(
+            $"Deseja realmente desinstalar o programa '{sw.Name}' deste computador?",
+            "Desinstalar Software — UniFAP",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Question);
+
+        if (confirm != System.Windows.MessageBoxResult.Yes) return;
+
         IsBusy = true;
-        OperationStatus = $"Removendo {sw.Name}...";
+        OperationStatus = $"Desinstalando {sw.Name}...";
+        sw.Status = SoftwareInstallStatus.Installing;
         try
         {
             bool uninstalled = await _softwareService.UninstallAsync(sw);
-            OperationStatus = uninstalled ? $"{sw.Name} desinstalado com sucesso." : $"Não foi possível desinstalar {sw.Name}.";
-            sw.Status = SoftwareInstallStatus.Pending;
+            if (uninstalled)
+            {
+                OperationStatus = $"✓ {sw.Name} foi desinstalado com sucesso.";
+                sw.Status = SoftwareInstallStatus.Pending;
+                sw.ErrorMessage = null;
+                FilterSoftware();
+            }
+            else
+            {
+                OperationStatus = $"✗ Não foi possível desinstalar {sw.Name}.";
+                sw.Status = SoftwareInstallStatus.Installed;
+                System.Windows.MessageBox.Show(
+                    $"Não foi possível desinstalar '{sw.Name}'. O pacote pode exigir desinstalação manual.",
+                    "Desinstalação — UniFAP",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
+            }
         }
         catch (Exception ex)
         {
-            OperationStatus = $"Erro ao desinstalar: {ex.Message}";
+            sw.Status = SoftwareInstallStatus.Installed;
+            OperationStatus = $"Erro ao desinstalar {sw.Name}: {ex.Message}";
         }
         finally
         {

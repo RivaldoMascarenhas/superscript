@@ -71,10 +71,10 @@
                 </Grid>
             </Border>
 
-            <!-- BUSCA E FILTRO DE ORIGEM -->
+            <!-- BUSCA, FILTRO DE STATUS E ORIGEM -->
             <Grid Margin="0,0,0,14">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
@@ -82,7 +82,27 @@
                          ToolTip="Pesquise por nome do programa, categoria ou descrição..." />
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Origem:" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" />
+                    <!-- FILTRO DE STATUS -->
+                    <TextBlock Text="Exibir:" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" FontSize="11" />
+                    <ItemsControl ItemsSource="{Binding StatusFilters}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding}" 
+                                        Command="{Binding DataContext.SelectStatusFilterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                        CommandParameter="{Binding}" 
+                                        Style="{StaticResource SecondaryButton}" 
+                                        Margin="0,0,4,0" Padding="10,4" FontSize="11" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- FILTRO DE ORIGEM -->
+                    <TextBlock Text="Origem:" VerticalAlignment="Center" Margin="12,0,6,0" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" FontSize="11" />
                     <ItemsControl ItemsSource="{Binding Sources}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -95,10 +115,17 @@
                                         Command="{Binding DataContext.SelectSourceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
                                         CommandParameter="{Binding}" 
                                         Style="{StaticResource SecondaryButton}" 
-                                        Margin="0,0,6,0" Padding="12,5" FontSize="11" />
+                                        Margin="0,0,4,0" Padding="10,4" FontSize="11" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+
+                    <!-- BOTÃO VERIFICAR INSTALADOS -->
+                    <Button Content="🔍 Verificar Instalados"
+                            Command="{Binding ScanInstalledPackagesCommand}"
+                            Style="{StaticResource SecondaryButton}"
+                            Padding="10,4" FontSize="11" Margin="8,0,0,0"
+                            ToolTip="Verifica quais softwares deste catálogo já estão instalados no computador." />
                 </StackPanel>
             </Grid>
 
@@ -193,6 +220,16 @@
                                                 CommandParameter="{Binding OfficialLink}" 
                                                 Style="{StaticResource SecondaryButton}" Padding="6,4" FontSize="11" Margin="0,0,4,0"
                                                 ToolTip="Abrir site oficial do projeto" />
+
+                                        <!-- BOTÃO DESINSTALAR (EXIBIDO QUANDO JÁ INSTALADO) -->
+                                        <Button Content="Desinstalar" 
+                                                Command="{Binding DataContext.UninstallSingleSoftwareCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                CommandParameter="{Binding}" 
+                                                Visibility="{Binding IsInstalled, Converter={StaticResource BoolToVis}}"
+                                                IsEnabled="{Binding IsInstalling, Converter={StaticResource InverseBool}}"
+                                                Background="#7F1D1D" Foreground="#FCA5A5" BorderBrush="#991B1B"
+                                                Padding="8,4" FontSize="11" Margin="0,0,4,0"
+                                                ToolTip="Desinstalar este programa do computador" />
 
                                         <Button Content="Reparar" 
                                                 Command="{Binding DataContext.RepairSingleSoftwareCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
