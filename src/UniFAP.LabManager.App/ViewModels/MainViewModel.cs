@@ -125,14 +125,20 @@ public class MainViewModel : ViewModelBase
             await SoftwareCatalogVM.InitializeAsync();
             await PreparationVM.InitializeAsync();
 
-            // Verificar se existe Job pendente para retomada automática pós-reboot
+            // Retomada automática pós-reboot só deve ocorrer se invocado com a flag --resume
+            bool isResumeRequested = Environment.GetCommandLineArgs().Any(a => a.Equals("--resume", StringComparison.OrdinalIgnoreCase));
             var pendingJob = await _jobOrchestrator.CheckForPendingResumedJobAsync();
-            if (pendingJob != null)
+            if (pendingJob != null && isResumeRequested)
             {
-                _logger.LogInformation("MainViewModel", $"Job pendente detectado pós-reboot: {pendingJob.Id}. Navegando para Execução...");
+                _logger.LogInformation("MainViewModel", $"Job pendente detectado pós-reboot com flag --resume: {pendingJob.Id}. Retomando execução...");
                 ExecutionVM.LoadJob(pendingJob);
                 CurrentViewModel = ExecutionVM;
                 _ = _jobOrchestrator.StartJobAsync(pendingJob);
+            }
+            else if (pendingJob != null)
+            {
+                _logger.LogInformation("MainViewModel", $"Job residual anterior ({pendingJob.Id}) detectado, mas abertura foi interativa. Limpando estado para nova escolha.");
+                await _jobOrchestrator.ClearJobStateAsync(pendingJob.Id);
             }
 
             StatusMessage = "Sistema pronto.";
