@@ -137,15 +137,92 @@ try {
             Domain = $Domain
             OUPath = $OUPath
         }
-        return
-    }
+    # Garantir que o DNS do controlador de domínio esteja configurado nos adaptadores de rede
+    try {
+        $targetDnsIps = @()
+        if (-not [string]::IsNullOrWhiteSpace($DomainController)) {
+            try {
+                $dcAddresses = [System.Net.Dns]::GetHostAddresses($DomainController)
+                foreach ($a in $dcAddresses) { $targetDnsIps += $a.IPAddressToString }
+            } catch { }
+        }
+        try {
+            $domAddresses = [System.Net.Dns]::GetHostAddresses($Domain)
+            foreach ($a in $domAddresses) { $targetDnsIps += $a.IPAddressToString }
+        } catch { }
+
+        $primaryDns = ($targetDnsIps | Select-Object -Unique | Select-Object -First 1)
+        if ($primaryDns) {
+            Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | ForEach-Object {
+                try {
+                    Set-DnsClientServerAddress -InterfaceAlias $_.Name -ServerAddresses ($primaryDns, "1.1.1.1") -ErrorAction SilentlyContinue
+                } catch { }
+            }
+        }
+    } catch { }
 
     Add-Computer @addParams
 
-    Write-JsonResult -Success $true -Message "Computador ingressado com sucesso no domínio '$Domain'." -NeedsReboot $true -Details @{
-        Domain = $Domain
-        OUPath = $OUPath
-        Joined = $true
+    # PÓS-INGRESSO: Configurar permissões locais e políticas de logon do Windows
+    $netbios = $Domain.Split('.')[0].ToUpper()
+    $rawUser = $Username
+    if ($rawUser -match '\\') { $rawUser = $rawUser.Split('\')[1] }
+    if ($rawUser -match '@') { $rawUser = $rawUser.Split('@')[0] }
+
+    # 1. Adicionar o técnico e Domain Admins aos Administradores locais da máquina
+    try {
+        Add-LocalGroupMember -Group "Administradores" -Member "$Domain\$rawUser" -ErrorAction SilentlyContinue
+    } catch {
+        net localgroup Administradores "$rawUser" /add 2>$null
+        net localgroup Administradores "$netbios\$rawUser" /add 2>$null
+    }
+
+    try {
+        Add-LocalGroupMember -Group "Administradores" -Member "$netbios\Domain Admins" -ErrorAction SilentlyContinue
+    } catch {
+        net localgroup Administradores "Domain Admins" /add 2>$null
+        net localgroup Administradores "$netbios\Domain Admins" /add 2>$null
+    }
+
+    try {
+        Add-LocalGroupMember -Group "Usuários" -Member "$netbios\Domain Users" -ErrorAction SilentlyContinue
+    } catch {
+        net localgroup "Usuários" "Domain Users" /add 2>$null
+        net localgroup "Usuários" "$netbios\Domain Users" /add 2>$null
+    }
+
+    # 2. Configurar o Domínio Padrão no Logon do Windows (para não tentar autenticar como usuário local)
+    try {
+        $winlogonPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"
+        if (Test-Path $winlogonPath) {
+            Set-ItemProperty -Path $winlogonPath -Name "DefaultDomainName" -Value $netbios -Force -ErrorAction SilentlyContinue
+            Set-ItemProperty -Path $winlogonPath -Name "AltDefaultDomainName" -Value $Domain -Force -ErrorAction SilentlyContinue
+            Set-ItemProperty -Path $winlogonPath -Name "CachePrimaryDomain" -Value $Domain -Force -ErrorAction SilentlyContinue
+            Set-ItemProperty -Path $winlogonPath -Name "CachedLogonsCount" -Value "25" -Force -ErrorAction SilentlyContinue
+        }
+
+        # 3. Forçar Windows a aguardar a rede antes de exibir o prompt de logon (evita 'Servidores de logon indisponíveis')
+        $winlogonPolicies = "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\CurrentVersion\Winlogon"
+        if (-not (Test-Path $winlogonPolicies)) {
+            New-Item -Path $winlogonPolicies -Force -ErrorAction SilentlyContinue | Out-Null
+        }
+        if (Test-Path $winlogonPolicies) {
+            Set-ItemProperty -Path $winlogonPolicies -Name "SyncForegroundPolicy" -Value 1 -Type DWord -Force -ErrorAction SilentlyContinue
+            Set-ItemProperty -Path $winlogonPolicies -Name "GpNetworkStartTimeoutPolicyValue" -Value 60 -Type DWord -Force -ErrorAction SilentlyContinue
+        }
+
+        $systemPolicies = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+        if (Test-Path $systemPolicies) {
+            Set-ItemProperty -Path $systemPolicies -Name "DefaultDomainName" -Value $netbios -Force -ErrorAction SilentlyContinue
+        }
+    } catch { }
+
+    Write-JsonResult -Success $true -Message "Computador ingressado com sucesso no domínio '$Domain'. Usuário '$Domain\$rawUser' e 'Domain Admins' adicionados aos Administradores locais." -NeedsReboot $true -Details @{
+        Domain          = $Domain
+        OUPath          = $OUPath
+        Joined          = $true
+        TechnicianAdmin = "$netbios\$rawUser"
+        DefaultDomain   = $netbios
     }
 
 } catch {

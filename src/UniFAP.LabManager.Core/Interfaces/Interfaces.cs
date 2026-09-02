@@ -148,6 +148,7 @@ public interface IPerformanceService
 public interface IBrandingService
 {
     Task<bool> ApplyBrandingAsync(bool dryRun = false);
+    Task<int> CreateDesktopShortcutsAsync();
     string GetWallpaperPath();
 }
 

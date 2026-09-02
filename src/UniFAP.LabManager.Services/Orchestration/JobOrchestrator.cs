@@ -355,6 +355,7 @@ public class JobOrchestrator : IJobOrchestrator
 
                 case StepType.Validation:
                     await Task.Delay(500, token);
+                    try { await _brandingService.CreateDesktopShortcutsAsync(); } catch { }
                     return true;
 
                 case StepType.Report:
@@ -423,6 +424,18 @@ public class JobOrchestrator : IJobOrchestrator
 
             NotifyJobUpdated(job);
             await SaveJobStateAsync(job);
+        }
+
+        // Criar atalhos na Área de Trabalho Pública para todos os usuários do computador
+        try
+        {
+            EmitLog("Criando atalhos na Área de Trabalho para todos os usuários...");
+            int shortcuts = await _brandingService.CreateDesktopShortcutsAsync();
+            EmitLog($"✓ Atalhos da Área de Trabalho configurados com sucesso ({shortcuts} atalhos criados/atualizados).");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("JobOrchestrator", $"Falha ao gerar atalhos de desktop: {ex.Message}");
         }
 
         return allOk;
