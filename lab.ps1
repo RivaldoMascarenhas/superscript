@@ -11,7 +11,7 @@
 # 1. Elevação Automática de Privilégios de Administrador (UAC)
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 if (-not $isAdmin) {
-    Write-Host "[INFO] Solicitando privilégios de Administrador..." -ForegroundColor Yellow
+    Write-Host "[INFO] Solicitando privilégios de Administrador (UAC)..." -ForegroundColor Yellow
     $scriptUrl = "https://raw.githubusercontent.com/RivaldoMascarenhas/superscript/main/lab.ps1"
     Start-Process powershell.exe -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -NoExit -Command `"irm $scriptUrl | iex`""
     exit
@@ -28,9 +28,8 @@ $InstallDir = "C:\ProgramData\UniFAP\LabManager\App"
 $TempZip = "$env:TEMP\UniFAP-LabManager.zip"
 
 $urlsToTry = @(
-    "https://github.com/RivaldoMascarenhas/superscript/raw/main/release/UniFAP-LabManager.zip",
     "https://raw.githubusercontent.com/RivaldoMascarenhas/superscript/main/release/UniFAP-LabManager.zip",
-    "https://github.com/RivaldoMascarenhas/superscript/releases/latest/download/UniFAP-LabManager.zip",
+    "https://github.com/RivaldoMascarenhas/superscript/raw/main/release/UniFAP-LabManager.zip",
     "http://intranet.unifapce.edu.br/softwares/UniFAP-LabManager.zip"
 )
 
@@ -65,8 +64,10 @@ $downloadSuccess = $false
 
 foreach ($url in $urlsToTry) {
     try {
-        Write-Host "   -> Conectando em: $url" -ForegroundColor DarkGray
-        Invoke-WebRequest -Uri $url -OutFile $TempZip -UseBasicParsing -TimeoutSec 60
+        Write-Host "   -> Baixando pacote de: $url" -ForegroundColor DarkGray
+        $wc = New-Object System.Net.WebClient
+        $wc.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+        $wc.DownloadFile($url, $TempZip)
         if (Test-Path $TempZip) {
             $fileSize = (Get-Item $TempZip).Length
             if ($fileSize -gt 1000000) {
@@ -78,7 +79,18 @@ foreach ($url in $urlsToTry) {
             }
         }
     } catch {
-        # Continua para a próxima URL
+        # Fallback para Invoke-WebRequest com UserAgent
+        try {
+            Invoke-WebRequest -Uri $url -OutFile $TempZip -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -UseBasicParsing -TimeoutSec 60
+            if (Test-Path $TempZip) {
+                $fileSize = (Get-Item $TempZip).Length
+                if ($fileSize -gt 1000000) {
+                    $downloadSuccess = $true
+                    Write-Host "   -> Download concluído com êxito! ($([math]::Round($fileSize/1MB, 2)) MB)" -ForegroundColor Green
+                    break
+                }
+            }
+        } catch { }
     }
 }
 
