@@ -11,6 +11,7 @@ obj/
 ## Distribuição e Pacotes
 dist/
 *.zip
+!release/UniFAP-LabManager.zip
 
 ## Logs e Arquivos Temporários
 *.log

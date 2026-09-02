@@ -2,8 +2,8 @@
 .SYNOPSIS
     lab.ps1 — Web Bootstrapper oficial do UNIFAP Lab Manager.
 .DESCRIPTION
-    Permite inicializar e executar o UniFAP Lab Manager remotamente em qualquer computador da faculdade com:
-    irm https://<servidor-ou-github>/lab.ps1 | iex
+    Permite inicializar e executar o UniFAP Lab Manager remotamente em qualquer computador com:
+    irm https://raw.githubusercontent.com/RivaldoMascarenhas/superscript/main/lab.ps1 | iex
 #>
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
@@ -13,7 +13,7 @@ $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIden
 if (-not $isAdmin) {
     Write-Host "[INFO] Solicitando privilégios de Administrador..." -ForegroundColor Yellow
     $scriptUrl = "https://raw.githubusercontent.com/RivaldoMascarenhas/superscript/main/lab.ps1"
-    Start-Process powershell.exe -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command `"irm $scriptUrl | iex`""
+    Start-Process powershell.exe -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -NoExit -Command `"irm $scriptUrl | iex`""
     exit
 }
 
@@ -24,11 +24,15 @@ Write-Host "           Centro Universitário Paraíso (UniFAP)          " -Foreg
 Write-Host "==========================================================" -ForegroundColor Cyan
 
 # 2. Configurações de Origem e Destino
-$PackageUrl = "https://github.com/RivaldoMascarenhas/superscript/releases/latest/download/UniFAP-LabManager.zip"
-$FallbackIntranetUrl = "http://intranet.unifapce.edu.br/softwares/UniFAP-LabManager.zip"
-
 $InstallDir = "C:\ProgramData\UniFAP\LabManager\App"
 $TempZip = "$env:TEMP\UniFAP-LabManager.zip"
+
+$urlsToTry = @(
+    "https://github.com/RivaldoMascarenhas/superscript/raw/main/release/UniFAP-LabManager.zip",
+    "https://raw.githubusercontent.com/RivaldoMascarenhas/superscript/main/release/UniFAP-LabManager.zip",
+    "https://github.com/RivaldoMascarenhas/superscript/releases/latest/download/UniFAP-LabManager.zip",
+    "http://intranet.unifapce.edu.br/softwares/UniFAP-LabManager.zip"
+)
 
 # 3. Verificar pré-requisito: .NET 8 Desktop Runtime
 Write-Host "[1/4] Verificando Microsoft .NET 8 Desktop Runtime..." -ForegroundColor Yellow
@@ -59,16 +63,19 @@ Write-Host "   -> .NET 8 Runtime: OK!" -ForegroundColor Green
 Write-Host "[2/4] Baixando a versão mais recente do UniFAP Lab Manager..." -ForegroundColor Yellow
 $downloadSuccess = $false
 
-# Tentar download de intranet primeiro se disponível, ou URL principal
-$urlsToTry = @($FallbackIntranetUrl, $PackageUrl)
 foreach ($url in $urlsToTry) {
     try {
-        Write-Host "   -> Tentando obter pacote de: $url" -ForegroundColor DarkGray
-        Invoke-WebRequest -Uri $url -OutFile $TempZip -UseBasicParsing -TimeoutSec 30
+        Write-Host "   -> Conectando em: $url" -ForegroundColor DarkGray
+        Invoke-WebRequest -Uri $url -OutFile $TempZip -UseBasicParsing -TimeoutSec 60
         if (Test-Path $TempZip) {
-            $downloadSuccess = $true
-            Write-Host "   -> Download concluído com êxito!" -ForegroundColor Green
-            break
+            $fileSize = (Get-Item $TempZip).Length
+            if ($fileSize -gt 1000000) {
+                $downloadSuccess = $true
+                Write-Host "   -> Download concluído com êxito! ($([math]::Round($fileSize/1MB, 2)) MB)" -ForegroundColor Green
+                break
+            } else {
+                Remove-Item $TempZip -Force -ErrorAction SilentlyContinue
+            }
         }
     } catch {
         # Continua para a próxima URL
@@ -86,8 +93,9 @@ if (-not $downloadSuccess) {
 }
 
 if (-not $downloadSuccess) {
-    Write-Host "[ERRO] Não foi possível baixar o pacote do UniFAP Lab Manager." -ForegroundColor Red
-    Write-Host "Certifique-se de publicar o arquivo 'UniFAP-LabManager.zip' no servidor web ou GitHub." -ForegroundColor Yellow
+    Write-Host "`n[ERRO] Não foi possível baixar o pacote do UniFAP Lab Manager." -ForegroundColor Red
+    Write-Host "Verifique sua conexão com a internet ou o acesso ao GitHub." -ForegroundColor Yellow
+    Read-Host "`nPressione Enter para fechar..."
     exit 1
 }
 
@@ -120,3 +128,4 @@ Start-Process -FilePath $exePath -WorkingDirectory $InstallDir
 Write-Host "==========================================================" -ForegroundColor Green
 Write-Host "   UNIFAP LAB MANAGER INICIADO COM SUCESSO!              " -ForegroundColor Green
 Write-Host "==========================================================" -ForegroundColor Green
+Start-Sleep -Seconds 3
