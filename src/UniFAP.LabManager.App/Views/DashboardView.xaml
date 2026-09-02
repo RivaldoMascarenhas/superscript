@@ -139,6 +139,7 @@
                     <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="20,0,0,0">
                         <TextBlock Text="STATUS GERAL" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" />
                         <TextBlock Text="{Binding OverallStatusText}" FontSize="24" FontWeight="Bold" Foreground="{Binding OverallHealth, Converter={StaticResource StatusToColor}}" HorizontalAlignment="Center" />
+                        <TextBlock Text="{Binding OverallStatusReason}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" MaxWidth="280" TextWrapping="Wrap" TextAlignment="Center" Margin="0,4,0,0" />
                     </StackPanel>
                 </Grid>
             </Border>

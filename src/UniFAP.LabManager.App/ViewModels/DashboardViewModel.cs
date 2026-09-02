@@ -34,6 +34,13 @@ public class DashboardViewModel : ViewModelBase
         set => SetProperty(ref _overallStatusText, value);
     }
 
+    private string _overallStatusReason = "Estação 100% pronta para preparação e uso institucional.";
+    public string OverallStatusReason
+    {
+        get => _overallStatusReason;
+        set => SetProperty(ref _overallStatusReason, value);
+    }
+
     public bool HasMultipleIps => SystemInfo?.ConnectedAdapters?.Count > 1;
     public string PendingRebootDisplay => SystemInfo.HasPendingReboot ? "Sim (Pendente)" : "Não";
     public bool IsAdminRequiredWarning => !SystemInfo.IsAdministrator;
@@ -72,10 +79,7 @@ public class DashboardViewModel : ViewModelBase
         {
             SystemInfo = initialInfo;
         }
-        else
-        {
-            await RefreshAsync();
-        }
+        await RefreshAsync();
     }
 
     public async Task RefreshAsync()
@@ -86,13 +90,28 @@ public class DashboardViewModel : ViewModelBase
             SystemInfo = await _diagnosticsService.CollectSystemInfoAsync();
             var report = await _diagnosticsService.RunFullDiagnosticsAsync();
             OverallHealth = report.OverallStatus;
-            OverallStatusText = OverallHealth switch
+
+            var warnings = report.Checks.Where(c => c.Status == HealthStatus.Warning).ToList();
+            var criticals = report.Checks.Where(c => c.Status == HealthStatus.Critical).ToList();
+
+            if (criticals.Count > 0)
             {
-                HealthStatus.Good => "PRONTO",
-                HealthStatus.Warning => "ATENÇÃO",
-                HealthStatus.Critical => "CRÍTICO",
-                _ => "DESCONHECIDO"
-            };
+                OverallHealth = HealthStatus.Critical;
+                OverallStatusText = "CRÍTICO";
+                OverallStatusReason = $"{criticals.Count} alerta(s) crítico(s): {string.Join(", ", criticals.Select(c => c.Name))}";
+            }
+            else if (warnings.Count > 0)
+            {
+                OverallHealth = HealthStatus.Warning;
+                OverallStatusText = "ATENÇÃO";
+                OverallStatusReason = $"{warnings.Count} recomendação(ões): {string.Join(", ", warnings.Select(c => c.Name))}";
+            }
+            else
+            {
+                OverallHealth = HealthStatus.Good;
+                OverallStatusText = "PRONTO";
+                OverallStatusReason = "Estação 100% pronta para preparação e uso institucional.";
+            }
         }
         catch (Exception ex)
         {

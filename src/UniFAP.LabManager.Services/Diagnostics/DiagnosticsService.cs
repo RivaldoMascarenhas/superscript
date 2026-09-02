@@ -112,8 +112,8 @@ public class DiagnosticsService : IDiagnosticsService
             Name = "Resolução de Domínio UniFAP",
             Value = domain,
             Status = domainResolved ? HealthStatus.Good : (sysInfo.IsDomainJoined ? HealthStatus.Warning : HealthStatus.Unknown),
-            Message = domainResolved ? $"Domínio '{domain}' resolvido com sucesso." : $"Não foi possível resolver o domínio '{domain}'.",
-            ResolutionHint = "Configure os servidores DNS institucionais nas propriedades da placa de rede."
+            Message = domainResolved ? $"Domínio '{domain}' resolvido com sucesso." : (sysInfo.IsDomainJoined ? $"Não foi possível resolver o domínio '{domain}'." : $"Domínio '{domain}' não resolvido (fora da intranet institucional)."),
+            ResolutionHint = domainResolved ? null : "Configure os servidores DNS institucionais ou conecte-se à rede da UniFAP."
         });
 
         report.Checks.Add(new DiagnosticCheckResult
@@ -121,9 +121,9 @@ public class DiagnosticsService : IDiagnosticsService
             Category = "Active Directory",
             Name = "Status de Ingresso no Domínio",
             Value = sysInfo.IsDomainJoined ? $"Ingressado em {sysInfo.CurrentDomain}" : "Grupo de Trabalho (Workgroup)",
-            Status = sysInfo.IsDomainJoined ? HealthStatus.Good : HealthStatus.Warning,
-            Message = sysInfo.IsDomainJoined ? $"Máquina ingressada no domínio {sysInfo.CurrentDomain}." : "Máquina em Workgroup. Para setor administrativo, utilize a opção 'Preparar -> Administrativo'.",
-            ResolutionHint = "Utilize o assistente de preparação para ingressar no domínio corporativo."
+            Status = HealthStatus.Good,
+            Message = sysInfo.IsDomainJoined ? $"Máquina ingressada no domínio {sysInfo.CurrentDomain}." : "Estação em Grupo de Trabalho (Workgroup). Pronta para perfil de Laboratório ou Administrativo.",
+            ResolutionHint = sysInfo.IsDomainJoined ? null : "Caso deseje ingressar no domínio corporativo, utilize a opção 'Preparar -> Administrativo'."
         });
 
         // 4. Segurança
@@ -173,14 +173,45 @@ public class DiagnosticsService : IDiagnosticsService
         {
             using var sc = new ServiceController(serviceName);
             bool isRunning = sc.Status == ServiceControllerStatus.Running;
+            bool isDisabled = false;
+            try
+            {
+                isDisabled = sc.StartType == ServiceStartMode.Disabled;
+            }
+            catch { }
+
+            HealthStatus status;
+            string message;
+            if (isDisabled)
+            {
+                status = HealthStatus.Warning;
+                message = $"Serviço '{displayName}' está desativado.";
+            }
+            else if (isRunning)
+            {
+                status = HealthStatus.Good;
+                message = $"Serviço '{displayName}' em execução.";
+            }
+            else if (serviceName.Equals("Spooler", StringComparison.OrdinalIgnoreCase))
+            {
+                status = HealthStatus.Warning;
+                message = $"Serviço '{displayName}' parado.";
+            }
+            else
+            {
+                // wuauserv e W32Time em modo de inicialização manual/gatilho são normais no Windows quando ociosos
+                status = HealthStatus.Good;
+                message = $"Serviço '{displayName}' configurado em demanda ({sc.Status}).";
+            }
+
             report.Checks.Add(new DiagnosticCheckResult
             {
                 Category = "Serviços",
                 Name = displayName,
-                Value = sc.Status.ToString(),
-                Status = isRunning ? HealthStatus.Good : HealthStatus.Warning,
-                Message = isRunning ? $"Serviço '{displayName}' em execução." : $"Serviço '{displayName}' está {sc.Status}.",
-                ResolutionHint = isRunning ? null : $"Inicie o serviço '{serviceName}' via services.msc."
+                Value = isRunning ? "Em execução" : (isDisabled ? "Desativado" : "Em demanda"),
+                Status = status,
+                Message = message,
+                ResolutionHint = isRunning ? null : (isDisabled ? $"Ative o serviço '{serviceName}' via services.msc." : null)
             });
         }
         catch
