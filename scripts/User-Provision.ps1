@@ -58,27 +58,30 @@ try {
 
     $results = @{}
 
+    # Senhas padrão institucionais se não forem passadas
+    if (-not $SupportPassword) {
+        $SupportPassword = "UniFAP@Suporte2026!" | ConvertTo-SecureString -AsPlainText -Force
+    }
+    if (-not $StudentPassword) {
+        $StudentPassword = "UniFAP@Aluno2026!" | ConvertTo-SecureString -AsPlainText -Force
+    }
+
     # 1. Provisionar Usuário Suporte (Administrador Local)
     $supportExists = Get-LocalUser -Name $SupportUserName -ErrorAction SilentlyContinue
     if (-not $supportExists) {
         $userParams = @{
             Name                  = $SupportUserName
             FullName              = $SupportDisplayName
-            Description           = "Conta administrativa local para suporte de TI UniFAP"
+            Description           = "Suporte de TI UniFAP"
             PasswordNeverExpires  = $true
             UserMayNotChangePassword = $false
-        }
-        if ($SupportPassword) {
-            $userParams["Password"] = $SupportPassword
-        } else {
-            throw "A senha para o usuário administrador local '$SupportUserName' é obrigatória e deve ser informada em tempo de execução."
+            Password              = $SupportPassword
         }
         New-LocalUser @userParams
         $results[$SupportUserName] = "Criado"
     } else {
-        if ($SupportPassword) {
-            Set-LocalUser -Name $SupportUserName -Password $SupportPassword
-        }
+        Set-LocalUser -Name $SupportUserName -Password $SupportPassword
+        Enable-LocalUser -Name $SupportUserName -ErrorAction SilentlyContinue
         $results[$SupportUserName] = "Atualizado"
     }
 
@@ -93,29 +96,19 @@ try {
     # 2. Provisionar Usuário Aluno (Usuário Padrão)
     $studentExists = Get-LocalUser -Name $StudentUserName -ErrorAction SilentlyContinue
     if (-not $studentExists) {
-        if ($StudentPassword) {
-            $studentPass = $StudentPassword
-        } else {
-            # Gerar senha dinâmica única não previsível
-            $randomBytes = New-Object byte[] 16
-            [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($randomBytes)
-            $randomStr = [Convert]::ToBase64String($randomBytes) + "U1!"
-            $studentPass = $randomStr | ConvertTo-SecureString -AsPlainText -Force
-        }
         $userParams = @{
             Name                     = $StudentUserName
             FullName                 = $StudentDisplayName
-            Description              = "Conta padrão para alunos e atividades acadêmicas"
-            Password                 = $studentPass
+            Description              = "Aluno / Usuario Padrao"
+            Password                 = $StudentPassword
             PasswordNeverExpires     = $true
             UserMayNotChangePassword = $true
         }
         New-LocalUser @userParams
         $results[$StudentUserName] = "Criado"
     } else {
-        if ($StudentPassword) {
-            Set-LocalUser -Name $StudentUserName -Password $StudentPassword
-        }
+        Set-LocalUser -Name $StudentUserName -Password $StudentPassword
+        Enable-LocalUser -Name $StudentUserName -ErrorAction SilentlyContinue
         $results[$StudentUserName] = "Atualizado"
     }
 
@@ -138,4 +131,5 @@ try {
 
 } catch {
     Write-JsonResult -Success $false -Message "Erro ao provisionar usuários locais: $($_.Exception.Message)"
+    exit 1
 }

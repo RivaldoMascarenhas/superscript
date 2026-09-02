@@ -138,7 +138,17 @@ public class MaintenanceViewModel : ViewModelBase
         try
         {
             bool ok = await _userService.ProvisionUsersAsync(null, null, dryRun: false);
-            AppendLog(ok ? "✓ Usuários criados e privilégios isolados com sucesso!" : "⚠ Falha ao criar usuários.");
+            if (ok)
+            {
+                AppendLog("✓ Usuários criados e privilégios isolados com sucesso!");
+                AppendLog("  -> suporte (Administrador): UniFAP@Suporte2026!");
+                AppendLog("  -> aluno (Usuário Padrão): UniFAP@Aluno2026!");
+            }
+            else
+            {
+                AppendLog("✗ Falha ao provisionar usuários locais.");
+                AppendLog("  Dica: Certifique-se de executar o aplicativo com privilégios de Administrador.");
+            }
         }
         catch (Exception ex)
         {

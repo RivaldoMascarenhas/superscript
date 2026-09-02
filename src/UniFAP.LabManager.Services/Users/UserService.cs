@@ -53,13 +53,19 @@ public class UserService : IUserService
             }
 
             var result = await _powerShellRunner.ExecuteCommandAsync(psCommand);
-            if (result.Success || result.StandardOutput.Contains("provisionados com sucesso", StringComparison.OrdinalIgnoreCase))
+            bool isSuccess = result.Success && (
+                result.StandardOutput.Contains("\"Success\":true", StringComparison.OrdinalIgnoreCase) ||
+                result.StandardOutput.Contains("\"Success\": true", StringComparison.OrdinalIgnoreCase) ||
+                result.StandardOutput.Contains("provisionados com sucesso", StringComparison.OrdinalIgnoreCase));
+
+            if (isSuccess)
             {
                 _logger.LogInformation("UserService", "Usuários locais 'suporte' e 'aluno' configurados com sucesso.");
                 return true;
             }
 
-            _logger.LogWarning("UserService", $"Retorno do script de usuários: {result.StandardError}");
+            string errorDetail = !string.IsNullOrWhiteSpace(result.StandardError) ? result.StandardError : result.StandardOutput;
+            _logger.LogError("UserService", $"Falha ao provisionar usuários locais: {errorDetail}");
             return false;
         }
         catch (Exception ex)
