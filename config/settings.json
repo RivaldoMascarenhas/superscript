@@ -1,0 +1,27 @@
+{
+  "theme": "Dark",
+  "language": "pt-BR",
+  "autoReboot": true,
+  "autoResume": true,
+  "silentInstall": true,
+  "showAdvancedLogsByDefault": false,
+  "paths": {
+    "programDataDir": "C:\\ProgramData\\UniFAP\\LabManager",
+    "logsDir": "C:\\ProgramData\\UniFAP\\LabManager\\Logs",
+    "reportsDir": "C:\\ProgramData\\UniFAP\\LabManager\\Reports",
+    "jobsDir": "C:\\ProgramData\\UniFAP\\LabManager\\Jobs"
+  },
+  "winget": {
+    "source": "winget",
+    "acceptAgreements": true,
+    "timeoutSeconds": 900
+  },
+  "diagnostics": {
+    "connectivityHosts": [
+      "8.8.8.8",
+      "1.1.1.1",
+      "www.google.com",
+      "www.unifap.edu.br"
+    ]
+  }
+}

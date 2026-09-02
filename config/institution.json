@@ -1,0 +1,9 @@
+{
+  "name": "Centro Universitário Paraíso - UNIFAP",
+  "shortName": "UniFAP",
+  "department": "Setor de Tecnologia da Informação (TI)",
+  "supportEmail": "ti@unifap.edu.br",
+  "portalUrl": "https://www.unifap.edu.br",
+  "appVersion": "1.0.0",
+  "environment": "Production"
+}

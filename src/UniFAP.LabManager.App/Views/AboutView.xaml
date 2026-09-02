@@ -1,0 +1,48 @@
+<UserControl x:Class="UniFAP.LabManager.App.Views.AboutView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:UniFAP.LabManager.App.ViewModels"
+             mc:Ignorable="d" d:DesignHeight="700" d:DesignWidth="1100"
+             d:DataContext="{d:DesignInstance vm:AboutViewModel}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="28">
+        <StackPanel MaxWidth="800" HorizontalAlignment="Left">
+
+            <!-- LOGO BADGE E TÍTULO -->
+            <Border Background="{StaticResource PrimaryBrush}" CornerRadius="12" Padding="16" Width="64" Height="64" HorizontalAlignment="Left" Margin="0,0,0,16">
+                <TextBlock Text="UF" Foreground="White" FontSize="26" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+
+            <TextBlock Text="{Binding AppTitle}" Style="{StaticResource TitleHeader}" />
+            <TextBlock Text="{Binding InstitutionName}" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource PrimaryBrush}" Margin="0,0,0,4" />
+            <TextBlock Text="{Binding Department}" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4" />
+            <TextBlock Text="{Binding Version}" FontSize="13" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,24" />
+
+            <!-- CARD DE PROPÓSITO E DIRETRIZES -->
+            <Border Style="{StaticResource CardPanel}">
+                <StackPanel>
+                    <TextBlock Text="SOBRE A FERRAMENTA" Style="{StaticResource CardTitle}" />
+                    <TextBlock Text="O UniFAP Lab Manager é a plataforma desktop corporativa desenvolvida para o setor de TI do Centro Universitário Paraíso - UNIFAP padronizar, configurar, diagnosticar e manter estações de trabalho administrativas e de laboratórios acadêmicos de maneira automatizada, robusta e declarativa." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,14" />
+
+                    <TextBlock Text="Pilares de Desenvolvimento:" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6" />
+                    <TextBlock Text="• Execução assíncrona desacoplada da interface (UI fluida e responsiva)" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2" />
+                    <TextBlock Text="• Configuração 100% declarativa em arquivos JSON (fácil manutenção)" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2" />
+                    <TextBlock Text="• Proteção de credenciais (isolamento em memória, zero hardcode)" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2" />
+                    <TextBlock Text="• Desempenho equilibrado com preservação visual (ClearType / animações)" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2" />
+                    <TextBlock Text="• Retomada autônoma pós-reboot (Job Persistence &amp; Agent)" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardPanel}">
+                <StackPanel>
+                    <TextBlock Text="SUPORTE INSTITUCIONAL" Style="{StaticResource CardTitle}" />
+                    <TextBlock Text="{Binding SupportEmail, StringFormat='E-mail: {0}'}" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2" />
+                    <TextBlock Text="{Binding PortalUrl, StringFormat='Portal: {0}'}" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "domain": "intranet.unifapce.edu.br",
+  "domainController": "",
+  "dnsServers": [],
+  "computerOu": "",
+  "administrativeOu": "",
+  "academicOu": "",
+  "requireCredentialPrompt": true,
+  "preValidation": {
+    "pingTimeoutMs": 3000,
+    "maxTimeDriftMinutes": 5,
+    "checkDnsResolution": true,
+    "checkLdapConnectivity": false
+  }
+}

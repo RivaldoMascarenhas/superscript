@@ -1,0 +1,26 @@
+## .NET e C#
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+.vscode/
+
+## Distribuição e Pacotes
+dist/
+*.zip
+
+## Logs e Arquivos Temporários
+*.log
+scratch/
+.gemini/
+.system_generated/
+
+## Arquivos de Sistema
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store

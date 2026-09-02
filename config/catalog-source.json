@@ -1,0 +1,24 @@
+{
+  "WinutilSourceUrl": "https://raw.githubusercontent.com/ChrisTitusTech/winutil/main/config/applications.json",
+  "FallbackLocalFile": "config/winutil-applications.json",
+  "LastSyncUtc": "2026-09-02T17:55:04.0724776Z",
+  "TotalUniFapItems": 30,
+  "TotalWinUtilItems": 232,
+  "MergedItems": 9,
+  "Categories": [
+    "Browsers",
+    "Development",
+    "Document",
+    "Education",
+    "Games",
+    "Multimedia",
+    "Networking",
+    "Utilities",
+    "Microsoft Tools",
+    "Pro Tools",
+    "Communication",
+    "Productivity",
+    "Security",
+    "Other"
+  ]
+}

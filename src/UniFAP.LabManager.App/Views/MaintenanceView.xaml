@@ -1,0 +1,138 @@
+<UserControl x:Class="UniFAP.LabManager.App.Views.MaintenanceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:UniFAP.LabManager.App.ViewModels"
+             mc:Ignorable="d" d:DesignHeight="750" d:DesignWidth="1100"
+             d:DataContext="{d:DesignInstance vm:MaintenanceViewModel}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="28">
+        <StackPanel MaxWidth="1100" HorizontalAlignment="Stretch">
+
+            <!-- CABEÇALHO -->
+            <TextBlock Text="Manutenção &amp; Ferramentas" Style="{StaticResource TitleHeader}" />
+            <TextBlock Text="Ações individuais e utilitários rápidos para administração permanente do parque de computadores UniFAP." Style="{StaticResource SubtitleHeader}" />
+
+            <!-- GRID DE FERRAMENTAS -->
+            <Grid Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- COLUNA ESQUERDA -->
+                <StackPanel Grid.Column="0">
+
+                    <!-- PAPEL DE PAREDE -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="🎨 Papel de Parede Institucional" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Aplica o wallpaper oficial da UniFAP e registra informações OEM." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Aplicar" Command="{Binding ApplyWallpaperCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
+
+                    <!-- DESEMPENHO SEGURO -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="⚡ Otimizações de Desempenho" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Ajusta tempos de resposta e desativa telemetria sem degradar fontes ou ClearType." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Otimizar" Command="{Binding ApplyPerformanceCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
+
+                    <!-- REVERTER OTIMIZAÇÕES -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="🛡️ Reverter Otimizações (Rollback)" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Restaura os valores padrão do registro do Windows gravados no snapshot." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Restaurar" Command="{Binding RollbackPerformanceCommand}" Style="{StaticResource SecondaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <!-- COLUNA DIREITA -->
+                <StackPanel Grid.Column="2">
+
+                    <!-- USUÁRIOS LOCAIS -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="👤 Provisionar Usuários Locais" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Cria e configura o administrador 'suporte' e o usuário padrão 'aluno'." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Configurar" Command="{Binding ProvisionUsersCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
+
+                    <!-- REPARO WINDOWS (DISM + SFC) -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="🔧 Reparar Integridade do Windows" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Executa rotina completa de DISM RestoreHealth e SFC Scannow para corrigir corrupções." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Reparar" Command="{Binding RepairWindowsCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
+
+                    <!-- VALIDAR ACTIVE DIRECTORY -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="🌐 Validar Active Directory" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Testa resolução de DNS e conectividade LDAP com o controlador institucional." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Testar" Command="{Binding ValidateDomainCommand}" Style="{StaticResource SecondaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <!-- CONSOLE DE SAÍDA DAS FERRAMENTAS -->
+            <Border Style="{StaticResource CardPanel}" Padding="16">
+                <StackPanel>
+                    <TextBlock Text="LOG DE EXECUÇÃO DAS FERRAMENTAS" Style="{StaticResource CardTitle}" FontSize="13" Foreground="{StaticResource PrimaryBrush}" Margin="0,0,0,8" />
+                    <Border Background="#020617" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12" Height="180">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <TextBlock Text="{Binding ActionLog}" FontFamily="{StaticResource CodeFont}" FontSize="12" Foreground="#A7F3D0" TextWrapping="Wrap" />
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

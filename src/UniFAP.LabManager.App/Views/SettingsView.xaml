@@ -1,0 +1,68 @@
+<UserControl x:Class="UniFAP.LabManager.App.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:UniFAP.LabManager.App.ViewModels"
+             mc:Ignorable="d" d:DesignHeight="750" d:DesignWidth="1100"
+             d:DataContext="{d:DesignInstance vm:SettingsViewModel}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="28">
+        <StackPanel MaxWidth="800" HorizontalAlignment="Left">
+
+            <!-- CABEÇALHO -->
+            <TextBlock Text="Configurações do Aplicativo" Style="{StaticResource TitleHeader}" />
+            <TextBlock Text="Ajuste as preferências visuais, parâmetros de domínio institucional e automação de processos." Style="{StaticResource SubtitleHeader}" />
+
+            <!-- CARD APARÊNCIA -->
+            <Border Style="{StaticResource CardPanel}">
+                <StackPanel>
+                    <TextBlock Text="APARÊNCIA E TEMA" Style="{StaticResource CardTitle}" Foreground="{StaticResource PrimaryBrush}" />
+
+                    <TextBlock Text="Tema da Interface:" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6" />
+                    <ComboBox ItemsSource="{Binding AvailableThemes}" SelectedItem="{Binding SelectedTheme}" Width="200" HorizontalAlignment="Left" Margin="0,0,0,10" />
+                </StackPanel>
+            </Border>
+
+            <!-- CARD ACTIVE DIRECTORY -->
+            <Border Style="{StaticResource CardPanel}">
+                <StackPanel>
+                    <TextBlock Text="ACTIVE DIRECTORY INSTITUCIONAL" Style="{StaticResource CardTitle}" Foreground="{StaticResource PrimaryBrush}" />
+                    <TextBlock Text="Assim como na janela nativa do Windows, o Lab Manager utiliza o nome do domínio e descobre o servidor e a OU padrão automaticamente." Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" Margin="0,0,0,12" TextWrapping="Wrap" />
+
+                    <TextBlock Text="Domínio Institucional:" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4" />
+                    <TextBox Text="{Binding Domain, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14" ToolTip="Ex: intranet.unifapce.edu.br" />
+
+                    <!-- PARÂMETROS AVANÇADOS (OPCIONAIS) -->
+                    <Expander Header="⚙️ Parâmetros Avançados (Opcional — Deixe em branco para detecção automática)" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12">
+                        <StackPanel Margin="10,10,0,0">
+                            <TextBlock Text="Controlador de Domínio (DC) (Opcional):" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4" />
+                            <TextBox Text="{Binding DomainController, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" ToolTip="Deixe vazio para o Windows localizar via DNS automaticamente" />
+
+                            <TextBlock Text="Unidade Organizacional (OU) (Opcional):" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4" />
+                            <TextBox Text="{Binding ComputerOu, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" ToolTip="Deixe vazio para utilizar o contêiner Computers padrão do domínio" />
+                        </StackPanel>
+                    </Expander>
+                </StackPanel>
+            </Border>
+
+            <!-- CARD COMPORTAMENTO -->
+            <Border Style="{StaticResource CardPanel}">
+                <StackPanel>
+                    <TextBlock Text="AUTOMAÇÃO E PROVISÃO" Style="{StaticResource CardTitle}" Foreground="{StaticResource PrimaryBrush}" />
+
+                    <CheckBox IsChecked="{Binding AutoReboot}" Content="Permitir reinicialização automática quando exigido por instaladores ou AD" Margin="0,0,0,8" />
+                    <CheckBox IsChecked="{Binding AutoResume}" Content="Retomar execução do Job automaticamente pós-reinicialização via Agent" Margin="0,0,0,8" />
+                    <CheckBox IsChecked="{Binding SilentInstall}" Content="Executar todas as instalações em modo estritamente silencioso" Margin="0,0,0,8" />
+                </StackPanel>
+            </Border>
+
+            <!-- BOTÃO SALVAR E FEEDBACK -->
+            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                <Button Content="💾 Salvar Configurações" Command="{Binding SaveSettingsCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,16,0" />
+                <TextBlock Text="{Binding SaveMessage}" Foreground="{StaticResource SuccessBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

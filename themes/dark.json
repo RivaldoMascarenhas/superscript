@@ -1,0 +1,27 @@
+{
+  "name": "Dark",
+  "displayName": "UniFAP Dark Mode (Azul Institucional / Grafite)",
+  "colors": {
+    "Background": "#0F172A",
+    "Surface": "#1E293B",
+    "SurfaceLight": "#334155",
+    "Border": "#475569",
+    "Primary": "#2563EB",
+    "PrimaryHover": "#1D4ED8",
+    "PrimaryActive": "#1E40AF",
+    "Secondary": "#0EA5E9",
+    "Accent": "#F59E0B",
+    "Success": "#10B981",
+    "Warning": "#F59E0B",
+    "Danger": "#EF4444",
+    "Info": "#3B82F6",
+    "TextPrimary": "#F8FAFC",
+    "TextSecondary": "#94A3B8",
+    "TextMuted": "#64748B",
+    "CardBackground": "#1E293B",
+    "SidebarBackground": "#0B1120",
+    "HeaderBackground": "#0F172A",
+    "LogBackground": "#020617",
+    "LogText": "#A7F3D0"
+  }
+}

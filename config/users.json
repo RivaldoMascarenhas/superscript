@@ -1,0 +1,24 @@
+{
+  "users": {
+    "support": {
+      "name": "suporte",
+      "displayName": "Suporte TI UniFAP",
+      "description": "Conta administrativa local para suporte técnico",
+      "administrator": true,
+      "passwordPrompt": true,
+      "passwordNeverExpires": true,
+      "userCannotChangePassword": false,
+      "enabled": true
+    },
+    "student": {
+      "name": "aluno",
+      "displayName": "Aluno / Usuário Padrão",
+      "description": "Conta de usuário padrão para atividades acadêmicas de laboratório",
+      "administrator": false,
+      "passwordPrompt": false,
+      "passwordNeverExpires": true,
+      "userCannotChangePassword": true,
+      "enabled": true
+    }
+  }
+}

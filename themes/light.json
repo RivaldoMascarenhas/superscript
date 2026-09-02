@@ -1,0 +1,27 @@
+{
+  "name": "Light",
+  "displayName": "UniFAP Light Mode (Claro Institucional)",
+  "colors": {
+    "Background": "#F8FAFC",
+    "Surface": "#FFFFFF",
+    "SurfaceLight": "#F1F5F9",
+    "Border": "#CBD5E1",
+    "Primary": "#1D4ED8",
+    "PrimaryHover": "#1E40AF",
+    "PrimaryActive": "#172554",
+    "Secondary": "#0284C7",
+    "Accent": "#D97706",
+    "Success": "#059669",
+    "Warning": "#D97706",
+    "Danger": "#DC2626",
+    "Info": "#2563EB",
+    "TextPrimary": "#0F172A",
+    "TextSecondary": "#475569",
+    "TextMuted": "#94A3B8",
+    "CardBackground": "#FFFFFF",
+    "SidebarBackground": "#0F172A",
+    "HeaderBackground": "#FFFFFF",
+    "LogBackground": "#0F172A",
+    "LogText": "#A7F3D0"
+  }
+}

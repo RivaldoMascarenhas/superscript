@@ -1,0 +1,62 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F6A207D7-7218-4856-B181-31534F507A6C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniFAP.LabManager.Core", "src\UniFAP.LabManager.Core\UniFAP.LabManager.Core.csproj", "{33011FD4-79EF-42FF-BCEC-FD81E34033B1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniFAP.LabManager.Infrastructure", "src\UniFAP.LabManager.Infrastructure\UniFAP.LabManager.Infrastructure.csproj", "{74B0F498-220C-451A-8B4B-E02C82E68138}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniFAP.LabManager.Services", "src\UniFAP.LabManager.Services\UniFAP.LabManager.Services.csproj", "{590919A6-3DF2-431F-B49B-B20541013CAC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniFAP.LabManager.App", "src\UniFAP.LabManager.App\UniFAP.LabManager.App.csproj", "{8C8E5268-A866-458E-8CEA-974C2DA32D4F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniFAP.LabManager.Agent", "src\UniFAP.LabManager.Agent\UniFAP.LabManager.Agent.csproj", "{210D169F-48F1-41AD-88AD-681A18B5C049}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniFAP.LabManager.Tests", "src\UniFAP.LabManager.Tests\UniFAP.LabManager.Tests.csproj", "{06B7ED1C-172C-4112-9768-17803FA42382}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{33011FD4-79EF-42FF-BCEC-FD81E34033B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33011FD4-79EF-42FF-BCEC-FD81E34033B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33011FD4-79EF-42FF-BCEC-FD81E34033B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33011FD4-79EF-42FF-BCEC-FD81E34033B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74B0F498-220C-451A-8B4B-E02C82E68138}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74B0F498-220C-451A-8B4B-E02C82E68138}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74B0F498-220C-451A-8B4B-E02C82E68138}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74B0F498-220C-451A-8B4B-E02C82E68138}.Release|Any CPU.Build.0 = Release|Any CPU
+		{590919A6-3DF2-431F-B49B-B20541013CAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{590919A6-3DF2-431F-B49B-B20541013CAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{590919A6-3DF2-431F-B49B-B20541013CAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{590919A6-3DF2-431F-B49B-B20541013CAC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C8E5268-A866-458E-8CEA-974C2DA32D4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C8E5268-A866-458E-8CEA-974C2DA32D4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C8E5268-A866-458E-8CEA-974C2DA32D4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C8E5268-A866-458E-8CEA-974C2DA32D4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{210D169F-48F1-41AD-88AD-681A18B5C049}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{210D169F-48F1-41AD-88AD-681A18B5C049}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{210D169F-48F1-41AD-88AD-681A18B5C049}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{210D169F-48F1-41AD-88AD-681A18B5C049}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06B7ED1C-172C-4112-9768-17803FA42382}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06B7ED1C-172C-4112-9768-17803FA42382}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06B7ED1C-172C-4112-9768-17803FA42382}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06B7ED1C-172C-4112-9768-17803FA42382}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{33011FD4-79EF-42FF-BCEC-FD81E34033B1} = {F6A207D7-7218-4856-B181-31534F507A6C}
+		{74B0F498-220C-451A-8B4B-E02C82E68138} = {F6A207D7-7218-4856-B181-31534F507A6C}
+		{590919A6-3DF2-431F-B49B-B20541013CAC} = {F6A207D7-7218-4856-B181-31534F507A6C}
+		{8C8E5268-A866-458E-8CEA-974C2DA32D4F} = {F6A207D7-7218-4856-B181-31534F507A6C}
+		{210D169F-48F1-41AD-88AD-681A18B5C049} = {F6A207D7-7218-4856-B181-31534F507A6C}
+		{06B7ED1C-172C-4112-9768-17803FA42382} = {F6A207D7-7218-4856-B181-31534F507A6C}
+	EndGlobalSection
+EndGlobal

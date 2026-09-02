@@ -1,0 +1,154 @@
+<Window x:Class="UniFAP.LabManager.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:UniFAP.LabManager.App.ViewModels"
+        xmlns:views="clr-namespace:UniFAP.LabManager.App.Views"
+        xmlns:conv="clr-namespace:UniFAP.LabManager.App.Converters"
+        mc:Ignorable="d"
+        Title="UNIFAP LAB MANAGER — Centro Universitário Paraíso"
+        Height="820" Width="1280"
+        MinHeight="700" MinWidth="1050"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource AppBgBrush}"
+        d:DataContext="{d:DesignInstance vm:MainViewModel}">
+
+    <Window.Resources>
+        <conv:BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+        <!-- DATA TEMPLATES PARA NAVEGAÇÃO ENTRE TELAS -->
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+            <views:DashboardView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PreparationViewModel}">
+            <views:PreparationView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ExecutionViewModel}">
+            <views:ExecutionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SoftwareCatalogViewModel}">
+            <views:SoftwareCatalogView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:MaintenanceViewModel}">
+            <views:MaintenanceView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DiagnosticsViewModel}">
+            <views:DiagnosticsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:HistoryViewModel}">
+            <views:HistoryView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <views:SettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AboutViewModel}">
+            <views:AboutView />
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="260" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ================= SIDEBAR LATERAL ================= -->
+        <Border Grid.Column="0" Background="{StaticResource AppBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- HEADER DA SIDEBAR: LOGO E IDENTIDADE -->
+                <Border Grid.Row="0" Padding="20,24,20,20">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Background="{StaticResource PrimaryBrush}" CornerRadius="8" Width="36" Height="36" Margin="0,0,10,0">
+                                <TextBlock Text="UF" Foreground="White" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="UNIFAP" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+                                <TextBlock Text="Lab Manager" FontSize="12" Foreground="{StaticResource PrimaryBrush}" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </StackPanel>
+                        <TextBlock Text="Centro Universitário Paraíso" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,8,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- MENU DE NAVEGAÇÃO -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="10,0">
+                    <StackPanel>
+                        <RadioButton Content="📊  Dashboard" IsChecked="True" Command="{Binding NavigateDashboardCommand}" Style="{StaticResource NavButton}" />
+                        <RadioButton Content="🚀  Preparar Computador" Command="{Binding NavigatePreparationCommand}" Style="{StaticResource NavButton}" />
+                        <RadioButton Content="📦  Softwares" Command="{Binding NavigateSoftwareCommand}" Style="{StaticResource NavButton}" />
+                        <RadioButton Content="🛠️  Ferramentas" Command="{Binding NavigateMaintenanceCommand}" Style="{StaticResource NavButton}" />
+                        <RadioButton Content="🩺  Diagnóstico" Command="{Binding NavigateDiagnosticsCommand}" Style="{StaticResource NavButton}" />
+                        <RadioButton Content="📜  Histórico" Command="{Binding NavigateHistoryCommand}" Style="{StaticResource NavButton}" />
+                        <RadioButton Content="⚙️  Configurações" Command="{Binding NavigateSettingsCommand}" Style="{StaticResource NavButton}" />
+                        <RadioButton Content="ℹ️  Sobre" Command="{Binding NavigateAboutCommand}" Style="{StaticResource NavButton}" />
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- FOOTER DA SIDEBAR: STATUS DA ESTAÇÃO -->
+                <Border Grid.Row="2" Padding="16" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding SystemInfo.ComputerName}" FontWeight="Bold" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="{Binding SystemInfo.OperatingSystem}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,6" />
+
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="8" Height="8" Fill="{StaticResource SuccessBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="TI Conectada" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource SuccessBrush}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ================= ÁREA DE CONTEÚDO PRINCIPAL ================= -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- TOP BAR / HEADER -->
+            <Border Grid.Row="0" Background="{StaticResource AppBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="24,14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="UNIFAP LAB MANAGER" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="•" Foreground="{StaticResource TextMutedBrush}" Margin="8,0" />
+                        <TextBlock Text="{Binding StatusMessage}" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" />
+                    </StackPanel>
+
+                    <!-- BADGES DE STATUS NO TOPO -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Background="{StaticResource SurfaceLightBrush}" CornerRadius="6" Padding="10,4" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Admin: " FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
+                                <TextBlock Text="Sim" FontSize="11" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="{StaticResource SurfaceLightBrush}" CornerRadius="6" Padding="10,4">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Domínio: " FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
+                                <TextBlock Text="{Binding SystemInfo.CurrentDomain}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- CONTEÚDO DINÂMICO (VIEW ATIVA) -->
+            <ContentControl Grid.Row="1" Content="{Binding CurrentViewModel}" />
+        </Grid>
+    </Grid>
+</Window>

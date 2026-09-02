@@ -1,0 +1,165 @@
+<UserControl x:Class="UniFAP.LabManager.App.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:UniFAP.LabManager.App.ViewModels"
+             xmlns:conv="clr-namespace:UniFAP.LabManager.App.Converters"
+             mc:Ignorable="d" d:DesignHeight="750" d:DesignWidth="1050"
+             d:DataContext="{d:DesignInstance vm:DashboardViewModel}">
+
+    <UserControl.Resources>
+        <conv:BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <conv:StepStatusToColorConverter x:Key="StatusToColor" />
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="28">
+        <StackPanel MaxWidth="1100" HorizontalAlignment="Stretch">
+
+            <!-- CABEÇALHO DA DASHBOARD -->
+            <Grid Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Visão Geral do Computador" Style="{StaticResource TitleHeader}" />
+                    <TextBlock Text="Status operacional, diagnóstico de hardware e prontidão de preparação institucional" Style="{StaticResource SubtitleHeader}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="↻ Atualizar Dados" Command="{Binding RefreshCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0" />
+                    <Button Content="⚡ Otimização Rápida" Command="{Binding QuickOptimizeCommand}" Style="{StaticResource SecondaryButton}" />
+                </StackPanel>
+            </Grid>
+
+            <!-- CARD PRINCIPAL: INFORMAÇÕES DO COMPUTADOR -->
+            <Border Style="{StaticResource CardPanel}" Margin="0,0,0,20">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="1.5*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,20,0">
+                        <TextBlock Text="COMPUTADOR" Style="{StaticResource CardTitle}" Foreground="{StaticResource PrimaryBrush}" FontSize="13" />
+                        <TextBlock Text="{Binding SystemInfo.ComputerName}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4" />
+                        <TextBlock Text="{Binding SystemInfo.OperatingSystem}" FontSize="15" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2" />
+                        <TextBlock Text="{Binding SystemInfo.ProcessorName}" FontSize="14" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,2" />
+                        <TextBlock Text="{Binding SystemInfo.Manufacturer, StringFormat='Fabricante: {0}'}" FontSize="13" Foreground="{StaticResource TextMutedBrush}" />
+
+                        <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                            <!-- Indicador de Memória RAM -->
+                            <Border Background="{StaticResource SurfaceLightBrush}" CornerRadius="8" Padding="14,10" Margin="0,0,12,0">
+                                <StackPanel>
+                                    <TextBlock Text="MEMÓRIA RAM" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" />
+                                    <TextBlock Text="{Binding SystemInfo.TotalMemoryGb, StringFormat='{}{0} GB Total'}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+                                    <TextBlock Text="{Binding SystemInfo.FreeMemoryGb, StringFormat='{}{0} GB Livres'}" FontSize="12" Foreground="{StaticResource SuccessBrush}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Indicador de Disco C: -->
+                            <Border Background="{StaticResource SurfaceLightBrush}" CornerRadius="8" Padding="14,10">
+                                <StackPanel>
+                                    <TextBlock Text="DISCO (C:)" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" />
+                                    <TextBlock Text="{Binding SystemInfo.SystemDiskFreeGb, StringFormat='{}{0} GB Livres'}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+                                    <TextBlock Text="{Binding SystemInfo.SystemDiskTotalGb, StringFormat='{}de {0} GB'}" FontSize="12" Foreground="{StaticResource TextMutedBrush}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- COLUNA DA DIREITA: STATUS EM TEMPO REAL -->
+                    <Border Grid.Column="1" Background="{StaticResource SurfaceLightBrush}" CornerRadius="8" Padding="16">
+                        <StackPanel>
+                            <TextBlock Text="STATUS INSTITUCIONAL" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,12" />
+
+                            <Grid Margin="0,4">
+                                <TextBlock Text="Rede Principal" Foreground="{StaticResource TextSecondaryBrush}" />
+                                <TextBlock Text="{Binding SystemInfo.IpAddress}" HorizontalAlignment="Right" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                            </Grid>
+
+                            <Grid Margin="0,4" Visibility="{Binding HasMultipleIps, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="Rede Cabeada" Foreground="{StaticResource TextSecondaryBrush}" />
+                                <TextBlock Text="{Binding SystemInfo.EthernetIpAddress}" HorizontalAlignment="Right" FontWeight="SemiBold" Foreground="{StaticResource PrimaryBrush}" />
+                            </Grid>
+
+                            <Grid Margin="0,4">
+                                <TextBlock Text="Administrador" Foreground="{StaticResource TextSecondaryBrush}" />
+                                <TextBlock Text="{Binding SystemInfo.AdministratorStatusDisplay}" HorizontalAlignment="Right" FontWeight="SemiBold" Foreground="{Binding SystemInfo.IsAdministrator, Converter={StaticResource StatusToColor}}" />
+                            </Grid>
+
+                            <Grid Margin="0,4">
+                                <TextBlock Text="Active Directory" Foreground="{StaticResource TextSecondaryBrush}" />
+                                <TextBlock Text="{Binding SystemInfo.CurrentDomain}" HorizontalAlignment="Right" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                            </Grid>
+
+                            <Grid Margin="0,4">
+                                <TextBlock Text="Gerenciador Winget" Foreground="{StaticResource TextSecondaryBrush}" />
+                                <TextBlock Text="Disponível" HorizontalAlignment="Right" FontWeight="SemiBold" Foreground="{StaticResource SuccessBrush}" />
+                            </Grid>
+
+                            <Grid Margin="0,4">
+                                <TextBlock Text="Reinicialização Pendente" Foreground="{StaticResource TextSecondaryBrush}" />
+                                <TextBlock Text="{Binding PendingRebootDisplay}" HorizontalAlignment="Right" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- CARD DE STATUS GERAL DE SAÚDE -->
+            <Border Style="{StaticResource CardPanel}" Margin="0,0,0,20">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="DIAGNÓSTICO E SAÚDE DO SISTEMA" Style="{StaticResource CardTitle}" FontSize="14" />
+                        <TextBlock Text="Todas as verificações prévias de integridade da máquina para uso na UniFAP." Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12" />
+
+                        <!-- Grid de badges de saúde -->
+                        <WrapPanel Orientation="Horizontal">
+                            <Border Background="{StaticResource SurfaceLightBrush}" CornerRadius="6" Padding="12,6" Margin="0,0,8,8">
+                                <TextBlock Text="Windows 11 ● Normal" Foreground="{StaticResource SuccessBrush}" FontWeight="SemiBold" />
+                            </Border>
+                            <Border Background="{StaticResource SurfaceLightBrush}" CornerRadius="6" Padding="12,6" Margin="0,0,8,8">
+                                <TextBlock Text="Desempenho ● Otimizado" Foreground="{StaticResource SuccessBrush}" FontWeight="SemiBold" />
+                            </Border>
+                            <Border Background="{StaticResource SurfaceLightBrush}" CornerRadius="6" Padding="12,6" Margin="0,0,8,8">
+                                <TextBlock Text="Rede UniFAP ● Conectado" Foreground="{StaticResource SuccessBrush}" FontWeight="SemiBold" />
+                            </Border>
+                            <Border Background="{StaticResource SurfaceLightBrush}" CornerRadius="6" Padding="12,6" Margin="0,0,8,8">
+                                <TextBlock Text="Segurança &amp; Defender ● Ativo" Foreground="{StaticResource SuccessBrush}" FontWeight="SemiBold" />
+                            </Border>
+                        </WrapPanel>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="20,0,0,0">
+                        <TextBlock Text="STATUS GERAL" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" />
+                        <TextBlock Text="{Binding OverallStatusText}" FontSize="24" FontWeight="Bold" Foreground="{Binding OverallHealth, Converter={StaticResource StatusToColor}}" HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- CALL TO ACTION: PREPARAÇÃO -->
+            <Border Background="#1E3A8A" BorderBrush="{StaticResource PrimaryBrush}" BorderThickness="1" CornerRadius="10" Padding="20">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="Deseja preparar este computador agora?" FontSize="18" FontWeight="Bold" Foreground="White" Margin="0,0,0,4" />
+                        <TextBlock Text="Padronize em poucos minutos com os perfis Administrativo ou de Laboratórios da UniFAP." Foreground="#93C5FD" />
+                    </StackPanel>
+
+                    <Button Grid.Column="1" Content="🚀 Iniciar Preparação" Command="{Binding NavigateToPreparationCommand}" Style="{StaticResource PrimaryButton}" Background="White" Foreground="{StaticResource PrimaryActiveBrush}" FontSize="15" Padding="24,12" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

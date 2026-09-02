@@ -1,0 +1,100 @@
+{
+  "laboratories": {
+    "geral": {
+      "id": "geral",
+      "displayName": "Laboratório Geral",
+      "description": "Configuração básica para laboratórios multidisciplinares e uso geral acadêmico.",
+      "joinDomain": false,
+      "software": [
+        "chrome",
+        "firefox",
+        "office365",
+        "winrar",
+        "vlc"
+      ]
+    },
+    "ads": {
+      "id": "ads",
+      "displayName": "Análise e Desenvolvimento de Sistemas (ADS)",
+      "description": "Ambiente completo com compiladores, bancos de dados, IDEs e ferramentas de programação.",
+      "joinDomain": false,
+      "software": [
+        "chrome",
+        "firefox",
+        "office365",
+        "winrar",
+        "androidstudio",
+        "arduino",
+        "docker",
+        "pycharm",
+        "intellij",
+        "python3",
+        "python311",
+        "nodejs",
+        "postgresql",
+        "pgadmin",
+        "vscode",
+        "wireshark",
+        "devcpp",
+        "jdk21"
+      ]
+    },
+    "engenharia": {
+      "id": "engenharia",
+      "displayName": "Engenharia Civil e Produção",
+      "description": "Softwares de modelagem estrutural, desenho técnico CAD e otimização matemática.",
+      "joinDomain": false,
+      "software": [
+        "chrome",
+        "firefox",
+        "office365",
+        "winrar",
+        "autocad2025",
+        "revit2025",
+        "eberick",
+        "lingo"
+      ]
+    },
+    "arquitetura": {
+      "id": "arquitetura",
+      "displayName": "Arquitetura e Urbanismo",
+      "description": "Ferramentas para desenho arquitetônico, modelagem BIM e prototipagem.",
+      "joinDomain": false,
+      "software": [
+        "chrome",
+        "firefox",
+        "office365",
+        "winrar",
+        "autocad2025",
+        "revit2025",
+        "figma"
+      ]
+    },
+    "psicologia": {
+      "id": "psicologia",
+      "displayName": "Psicologia Experimental",
+      "description": "Softwares para análise estatística e simulação de condicionamento operante.",
+      "joinDomain": false,
+      "software": [
+        "chrome",
+        "firefox",
+        "office365",
+        "winrar",
+        "r_project",
+        "sniffy"
+      ]
+    }
+  },
+  "administrative": {
+    "id": "administrativo",
+    "displayName": "Administrativo Institucional",
+    "description": "Perfil corporativo para funcionários, coordenações, professores e setores administrativos com ingresso no Active Directory.",
+    "joinDomain": true,
+    "software": [
+      "chrome",
+      "firefox",
+      "office365",
+      "winrar"
+    ]
+  }
+}

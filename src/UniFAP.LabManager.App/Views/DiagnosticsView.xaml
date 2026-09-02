@@ -1,0 +1,89 @@
+<UserControl x:Class="UniFAP.LabManager.App.Views.DiagnosticsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:UniFAP.LabManager.App.ViewModels"
+             xmlns:conv="clr-namespace:UniFAP.LabManager.App.Converters"
+             mc:Ignorable="d" d:DesignHeight="750" d:DesignWidth="1100"
+             d:DataContext="{d:DesignInstance vm:DiagnosticsViewModel}">
+
+    <UserControl.Resources>
+        <conv:BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <conv:StepStatusToColorConverter x:Key="StatusToColor" />
+        <conv:StepStatusToIconConverter x:Key="StatusToIcon" />
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="28">
+        <StackPanel MaxWidth="1100" HorizontalAlignment="Stretch">
+
+            <!-- CABEÇALHO -->
+            <Grid Margin="0,0,0,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Diagnóstico do Sistema" Style="{StaticResource TitleHeader}" />
+                    <TextBlock Text="Auditoria minuciosa de integridade de hardware, sistema operacional, rede e segurança." Style="{StaticResource SubtitleHeader}" />
+                </StackPanel>
+                <Button Grid.Column="1" Content="↻ Executar Diagnóstico" Command="{Binding RunDiagnosticsCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" />
+            </Grid>
+
+            <!-- FILTRO DE CATEGORIAS -->
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,18">
+                <ItemsControl ItemsSource="{Binding Categories}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding}" Command="{Binding DataContext.SelectCategoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Style="{StaticResource SecondaryButton}" Margin="0,0,8,0" Padding="14,6" FontSize="12" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- LISTA DE CHECAGENS -->
+            <ItemsControl ItemsSource="{Binding FilteredChecks}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource CardPanel}" Margin="0,0,0,10" Padding="14">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="32" />
+                                    <ColumnDefinition Width="220" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="140" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- STATUS ICON -->
+                                <TextBlock Grid.Column="0" Text="{Binding Status, Converter={StaticResource StatusToIcon}}" Foreground="{Binding Status, Converter={StaticResource StatusToColor}}" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" />
+
+                                <!-- NOME E CATEGORIA -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource TextPrimaryBrush}" />
+                                    <TextBlock Text="{Binding Category}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
+                                </StackPanel>
+
+                                <!-- MENSAGEM E DICA -->
+                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="10,0">
+                                    <TextBlock Text="{Binding Message}" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" />
+                                    <TextBlock Text="{Binding ResolutionHint, StringFormat='💡 Dica: {0}'}" FontSize="11" Foreground="{StaticResource AccentBrush}" Visibility="{Binding ResolutionHint, Converter={StaticResource BoolToVis}}" Margin="0,2,0,0" />
+                                </StackPanel>
+
+                                <!-- VALOR / STATUS -->
+                                <Border Grid.Column="3" Background="{StaticResource SurfaceLightBrush}" CornerRadius="6" Padding="10,4" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Value}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,34 @@
+{
+  "profile": "UniFAP_Balanced_Performance",
+  "description": "Otimizações seguras de alto desempenho sem degradar a estética visual ou quebrar componentes críticos do Windows 11.",
+  "visualEffects": {
+    "preserveClearType": true,
+    "preserveFontSmoothing": true,
+    "preserveThumbnails": true,
+    "preserveWindowAnimations": true,
+    "preserveDropShadows": true,
+    "optimizeMenuShowDelay": true,
+    "menuShowDelayMs": 150
+  },
+  "systemServices": {
+    "disableDiagnosticsTracking": true,
+    "disableConnectedUserExperiences": true,
+    "disableFeedbackHub": true,
+    "disableCortana": true,
+    "disableTipsAndTricks": true,
+    "disableGameBarWhenUnused": true,
+    "preserveWindowsDefender": true,
+    "preserveWindowsFirewall": true,
+    "preserveWindowsUpdate": true
+  },
+  "storageAndPower": {
+    "enableStorageSense": true,
+    "disableHibernateOnDesktops": true,
+    "setHighPerformancePowerPlan": false,
+    "setBalancedOptimizedPowerPlan": true
+  },
+  "network": {
+    "disableDeliveryOptimizationBandwidthHog": true,
+    "enableNetworkThrottlingIndexOptimization": true
+  }
+}

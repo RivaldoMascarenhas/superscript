@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  UNIFAP LAB MANAGER - Modelo de Autounattend.xml para Windows 11 24H2
+  Referência: https://schneegans.de/windows/unattend-generator/
+  Compatível com $OEM$ e FirstLogonCommands para inicialização autônoma do Lab Manager.
+-->
+<unattend xmlns="urn:schemas-microsoft-com:unattend">
+  <settings pass="oobeSystem">
+    <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+      <OOBE>
+        <HideEULAPage>true</HideEULAPage>
+        <HideLocalAccountScreen>true</HideLocalAccountScreen>
+        <HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
+        <HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+        <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+        <ProtectYourPC>3</ProtectYourPC>
+      </OOBE>
+      <UserAccounts>
+        <LocalAccounts>
+          <!-- Conta de Suporte Técnico Local (Admin) -->
+          <LocalAccount wcm:action="add" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+            <Description>Conta técnica para manutenção do setor de TI da UniFAP</Description>
+            <DisplayName>Suporte TI UniFAP</DisplayName>
+            <Group>Administrators</Group>
+            <Name>suporte</Name>
+          </LocalAccount>
+        </LocalAccounts>
+      </UserAccounts>
+      <FirstLogonCommands>
+        <!-- Execução do bootstrap do UniFAP Lab Manager no primeiro logon -->
+        <SynchronousCommand wcm:action="add" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+          <Order>1</Order>
+          <Description>UniFAP Lab Manager Bootstrap</Description>
+          <CommandLine>powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "if (Test-Path 'C:\OEM\UniFAP-LabManager\UniFAP.LabManager.App.exe') { Start-Process 'C:\OEM\UniFAP-LabManager\UniFAP.LabManager.App.exe' }"</CommandLine>
+        </SynchronousCommand>
+      </FirstLogonCommands>
+    </component>
+  </settings>
+</unattend>
