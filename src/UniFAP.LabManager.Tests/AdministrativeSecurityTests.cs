@@ -36,7 +36,8 @@ public class AdministrativeSecurityTests
         _configMock = new Mock<IConfigService>();
         _logMock = new Mock<ILogService>();
 
-        _persistenceStore = new JobPersistenceStore(_logMock.Object);
+        string tempDir = Path.Combine(Path.GetTempPath(), "UniFAP_AdminTests_" + Guid.NewGuid().ToString("N"));
+        _persistenceStore = new JobPersistenceStore(_logMock.Object, tempDir);
 
         var profiles = new ProfilesConfig
         {

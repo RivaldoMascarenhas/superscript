@@ -19,10 +19,10 @@ public class JobPersistenceStore
         Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.CamelCase, allowIntegerValues: true) }
     };
 
-    public JobPersistenceStore(ILogService logger)
+    public JobPersistenceStore(ILogService logger, string? baseDir = null)
     {
         _logger = logger;
-        _baseDir = @"C:\ProgramData\UniFAP\LabManager";
+        _baseDir = baseDir ?? @"C:\ProgramData\UniFAP\LabManager";
         _jobsDir = Path.Combine(_baseDir, "Jobs");
         _activeJobStateFile = Path.Combine(_baseDir, "active_job_state.json");
         EnsureDirectories();

@@ -47,7 +47,8 @@ public class JobOrchestratorTests
         _configService = new ConfigService(_loggerMock.Object, configDir, themesDir);
         _configService.LoadAllAsync().GetAwaiter().GetResult();
 
-        _persistenceStore = new JobPersistenceStore(_loggerMock.Object);
+        string tempDir = Path.Combine(Path.GetTempPath(), "UniFAP_Tests_" + Guid.NewGuid().ToString("N"));
+        _persistenceStore = new JobPersistenceStore(_loggerMock.Object, tempDir);
     }
 
     [Fact]
