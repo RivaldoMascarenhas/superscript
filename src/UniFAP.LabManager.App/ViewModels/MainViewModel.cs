@@ -69,6 +69,13 @@ public class MainViewModel : ViewModelBase
 
     public string ConsoleToggleText => IsConsoleVisible ? "▼ Recolher" : "▲ Expandir";
 
+    private bool _showDebugLogs;
+    public bool ShowDebugLogs
+    {
+        get => _showDebugLogs;
+        set => SetProperty(ref _showDebugLogs, value);
+    }
+
     public event Action? OnLogAppended;
 
     // ViewModels filhas
@@ -146,6 +153,8 @@ public class MainViewModel : ViewModelBase
 
         _logger.OnLogEmitted += (source, level, message) =>
         {
+            if (level == "DEBUG" && !ShowDebugLogs) return;
+
             System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
             {
                 string timestamp = DateTime.Now.ToString("HH:mm:ss");
