@@ -35,6 +35,8 @@ public class MaintenanceViewModel : ViewModelBase
         set => SetProperty(ref _actionLog, value);
     }
 
+    public event Func<Task<(bool success, string password)>>? OnPromptSupportPassword;
+
     public ICommand ApplyWallpaperCommand { get; }
     public ICommand ApplyPerformanceCommand { get; }
     public ICommand RollbackPerformanceCommand { get; }
@@ -133,16 +135,28 @@ public class MaintenanceViewModel : ViewModelBase
 
     private async Task ProvisionUsersAsync()
     {
+        string? supportPassword = null;
+        if (OnPromptSupportPassword != null)
+        {
+            var prompt = await OnPromptSupportPassword.Invoke();
+            if (!prompt.success)
+            {
+                AppendLog("Operação de provisionamento de usuários cancelada pelo técnico.");
+                return;
+            }
+            supportPassword = prompt.password;
+        }
+
         IsExecuting = true;
-        AppendLog("Provisionando usuários 'suporte' (Admin) e 'aluno' (Padrão)...");
+        AppendLog("Provisionando usuário administrador 'suporte' e usuário padrão 'aluno' (sem senha)...");
         try
         {
-            bool ok = await _userService.ProvisionUsersAsync(null, null, dryRun: false);
+            bool ok = await _userService.ProvisionUsersAsync(supportPassword, null, dryRun: false);
             if (ok)
             {
                 AppendLog("✓ Usuários criados e privilégios isolados com sucesso!");
-                AppendLog("  -> suporte (Administrador): UniFAP@Suporte2026!");
-                AppendLog("  -> aluno (Usuário Padrão): UniFAP@Aluno2026!");
+                AppendLog("  -> suporte (Administrador): Senha definida pelo técnico configurada.");
+                AppendLog("  -> aluno (Usuário Padrão): Configurado SEM SENHA (acesso livre nos laboratórios).");
             }
             else
             {

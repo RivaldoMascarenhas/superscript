@@ -2,8 +2,9 @@
 .SYNOPSIS
     Provisionamento Seguro de Usuários Locais para o UniFAP Lab Manager.
 .DESCRIPTION
-    Cria ou atualiza os usuários 'suporte' (Administrador Local) e 'aluno' (Usuário Padrão).
-    Garante isolamento de privilégios para que o usuário 'aluno' NUNCA receba permissões administrativas.
+    Cria ou atualiza os usuários:
+      - 'suporte': Administrador Local com senha definida pelo técnico.
+      - 'aluno': Usuário Padrão SEM SENHA para acesso livre às aulas nos laboratórios.
 #>
 [CmdletBinding()]
 param(
@@ -48,7 +49,7 @@ function Write-JsonResult {
 
 try {
     if ($WhatIf) {
-        Write-JsonResult -Success $true -Message "Simulação: Usuário '$SupportUserName' (Administrador) e '$StudentUserName' (Usuário Padrão) seriam provisionados." -UsersConfigured @{
+        Write-JsonResult -Success $true -Message "Simulação: Usuário '$SupportUserName' (Administrador) e '$StudentUserName' (Sem senha) seriam provisionados." -UsersConfigured @{
             SupportUser = $SupportUserName
             StudentUser = $StudentUserName
             WhatIf      = $true
@@ -58,31 +59,27 @@ try {
 
     $results = @{}
 
-    # Senhas padrão institucionais se não forem passadas
+    # 1. Usuário Suporte (Administrador Local - Senha Solicitada ao Técnico)
     if (-not $SupportPassword) {
-        $SupportPassword = "UniFAP@Suporte2026!" | ConvertTo-SecureString -AsPlainText -Force
-    }
-    if (-not $StudentPassword) {
-        $StudentPassword = "UniFAP@Aluno2026!" | ConvertTo-SecureString -AsPlainText -Force
+        throw "A senha para o administrador local '$SupportUserName' é obrigatória e deve ser fornecida pelo técnico."
     }
 
-    # 1. Provisionar Usuário Suporte (Administrador Local)
     $supportExists = Get-LocalUser -Name $SupportUserName -ErrorAction SilentlyContinue
     if (-not $supportExists) {
         $userParams = @{
-            Name                  = $SupportUserName
-            FullName              = $SupportDisplayName
-            Description           = "Suporte de TI UniFAP"
-            PasswordNeverExpires  = $true
+            Name                     = $SupportUserName
+            FullName                 = $SupportDisplayName
+            Description              = "Suporte de TI UniFAP"
+            PasswordNeverExpires     = $true
             UserMayNotChangePassword = $false
-            Password              = $SupportPassword
+            Password                 = $SupportPassword
         }
         New-LocalUser @userParams
-        $results[$SupportUserName] = "Criado"
+        $results[$SupportUserName] = "Criado (Administrador)"
     } else {
         Set-LocalUser -Name $SupportUserName -Password $SupportPassword
         Enable-LocalUser -Name $SupportUserName -ErrorAction SilentlyContinue
-        $results[$SupportUserName] = "Atualizado"
+        $results[$SupportUserName] = "Atualizado (Administrador)"
     }
 
     # Adicionar suporte ao grupo Administradores se não estiver
@@ -93,23 +90,28 @@ try {
         Add-LocalGroupMember -Group "Administrators" -Member $SupportUserName -ErrorAction SilentlyContinue
     }
 
-    # 2. Provisionar Usuário Aluno (Usuário Padrão)
+    # 2. Usuário Aluno (Usuário Padrão - SEM SENHA para uso em laboratórios)
     $studentExists = Get-LocalUser -Name $StudentUserName -ErrorAction SilentlyContinue
     if (-not $studentExists) {
         $userParams = @{
             Name                     = $StudentUserName
             FullName                 = $StudentDisplayName
             Description              = "Aluno / Usuario Padrao"
-            Password                 = $StudentPassword
             PasswordNeverExpires     = $true
             UserMayNotChangePassword = $true
         }
         New-LocalUser @userParams
-        $results[$StudentUserName] = "Criado"
+        $results[$StudentUserName] = "Criado (Sem senha)"
     } else {
-        Set-LocalUser -Name $StudentUserName -Password $StudentPassword
+        # Remover qualquer senha existente para deixar a conta livre sem senha
+        try {
+            cmd.exe /c "net user $StudentUserName `"`"" | Out-Null
+        } catch {
+            Set-LocalUser -Name $StudentUserName -Password ([System.Security.SecureString]::new()) -ErrorAction SilentlyContinue
+        }
+        Set-LocalUser -Name $StudentUserName -PasswordNeverExpires $true -UserMayNotChangePassword $true -ErrorAction SilentlyContinue
         Enable-LocalUser -Name $StudentUserName -ErrorAction SilentlyContinue
-        $results[$StudentUserName] = "Atualizado"
+        $results[$StudentUserName] = "Atualizado (Sem senha)"
     }
 
     # Assegurar que 'aluno' pertence a 'Usuários' e NUNCA a 'Administradores'
@@ -127,7 +129,7 @@ try {
         Remove-LocalGroupMember -Group "Administrators" -Member $StudentUserName -ErrorAction SilentlyContinue
     } catch {}
 
-    Write-JsonResult -Success $true -Message "Usuários locais provisionados com sucesso e privilégios estritamente isolados." -UsersConfigured $results
+    Write-JsonResult -Success $true -Message "Usuários locais provisionados com sucesso: 'suporte' (Admin) e 'aluno' (Sem senha)." -UsersConfigured $results
 
 } catch {
     Write-JsonResult -Success $false -Message "Erro ao provisionar usuários locais: $($_.Exception.Message)"

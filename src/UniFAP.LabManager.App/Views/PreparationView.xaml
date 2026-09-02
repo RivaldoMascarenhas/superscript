@@ -211,7 +211,7 @@
                             <TextBlock Text="Obrigatório em Todas as Máquinas" FontSize="11" FontWeight="Bold" Foreground="{StaticResource WarningBrush}" />
                         </Border>
                     </Grid>
-                    <TextBlock Text="A conta local 'suporte' com privilégios de Administrador é configurada em todas as estações (Administrativo e Laboratório) para manutenção da equipe de TI. Defina e confirme a senha abaixo:" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,14" />
+                    <TextBlock Text="O usuário local 'suporte' (Administrador) terá a senha definida abaixo. O usuário 'aluno' (Usuário Padrão) será configurado SEM SENHA para acesso livre e imediato às aulas nos laboratórios." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,14" />
 
                     <Grid>
                         <Grid.ColumnDefinitions>

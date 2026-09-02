@@ -1,0 +1,50 @@
+<Window x:Class="UniFAP.LabManager.App.Views.UserProvisionDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Provisionar Usuários Locais — UniFAP"
+        Height="470" Width="480"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{StaticResource AppBgBrush}">
+
+    <Border Padding="28">
+        <StackPanel>
+            <TextBlock Text="CONFIGURAR ADMINISTRADOR 'suporte'" Style="{StaticResource TitleHeader}" FontSize="17" Foreground="{StaticResource PrimaryBrush}" />
+            <TextBlock Text="Defina a senha de administrador local para o suporte técnico. O usuário acadêmico 'aluno' será configurado sem senha para acesso direto nos laboratórios." 
+                       Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,16" FontSize="12" />
+
+            <!-- RESUMO DAS CONTAS -->
+            <Border Background="{StaticResource SurfaceLightBrush}" CornerRadius="8" Padding="14,10" Margin="0,0,0,18">
+                <StackPanel>
+                    <TextBlock Text="🛡️ suporte: Administrador Local (Senha definida abaixo)" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4" />
+                    <TextBlock Text="🎓 aluno: Usuário Padrão (Sem senha para acesso livre)" FontSize="12" Foreground="{StaticResource SuccessBrush}" />
+                </StackPanel>
+            </Border>
+
+            <!-- CAMPOS DE SENHA -->
+            <TextBlock Text="Senha do Administrador 'suporte' *:" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4" />
+            <PasswordBox x:Name="txtPassword" Margin="0,0,0,12" />
+
+            <TextBlock Text="Confirmar Senha *:" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4" />
+            <PasswordBox x:Name="txtConfirmPassword" Margin="0,0,0,8" />
+
+            <!-- MENSAGEM DE ERRO / AVISO -->
+            <TextBlock x:Name="txtError" Text="" Foreground="{StaticResource DangerBrush}" FontSize="12" FontWeight="Bold" Margin="0,0,0,16" Visibility="Collapsed" TextWrapping="Wrap" />
+
+            <!-- BOTÕES -->
+            <Grid Margin="0,8,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" Content="CANCELAR" Click="CancelButton_Click" Style="{StaticResource SecondaryButton}" Height="40" />
+                <Button Grid.Column="2" Content="CRIAR USUÁRIOS" Click="ConfirmButton_Click" Style="{StaticResource PrimaryButton}" Height="40" />
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>

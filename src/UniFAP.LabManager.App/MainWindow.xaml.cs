@@ -22,6 +22,9 @@ public partial class MainWindow : Window
         // Conectar evento do diálogo modal do Active Directory
         _viewModel.PreparationVM.OnPromptActiveDirectoryCredentials += PromptActiveDirectoryCredentialsAsync;
 
+        // Conectar evento do diálogo modal de senha do usuário suporte
+        _viewModel.MaintenanceVM.OnPromptSupportPassword += PromptSupportPasswordAsync;
+
         // Conectar navegações rápidas da Dashboard
         _viewModel.DashboardVM.OnNavigateToPreparationRequested += () => _viewModel.CurrentViewModel = _viewModel.PreparationVM;
         _viewModel.DashboardVM.OnNavigateToDiagnosticsRequested += () => _viewModel.CurrentViewModel = _viewModel.DiagnosticsVM;
@@ -55,6 +58,31 @@ public partial class MainWindow : Window
             else
             {
                 tcs.SetResult((false, string.Empty, string.Empty));
+            }
+        });
+
+        return tcs.Task;
+    }
+
+    private Task<(bool success, string password)> PromptSupportPasswordAsync()
+    {
+        var tcs = new TaskCompletionSource<(bool success, string password)>();
+
+        Dispatcher.Invoke(() =>
+        {
+            var dialog = new UserProvisionDialog
+            {
+                Owner = this
+            };
+
+            bool? result = dialog.ShowDialog();
+            if (result == true)
+            {
+                tcs.SetResult((true, dialog.Password));
+            }
+            else
+            {
+                tcs.SetResult((false, string.Empty));
             }
         });
 
