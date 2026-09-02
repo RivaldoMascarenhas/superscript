@@ -109,14 +109,17 @@ UniFAP.LabManager/
 
 ### ⚡ Execução Remota via Linha de Comando Única (Estilo WinUtil):
 
-Em qualquer computador da instituição (sem precisar baixar ou instalar nada antes), abra o PowerShell e execute:
+Em qualquer computador da instituição (sem precisar baixar ou configurar nada antes), abra o PowerShell como Administrador e execute o comando oficial ultra curto:
 
 ```powershell
-irm https://<servidor-web-ou-github>/lab.ps1 | iex
+irm tinyurl.com/labfap | iex
 ```
 
-*O bootstrapper detecta permissões, instala o .NET 8 Desktop Runtime automaticamente caso necessário, baixa o pacote institucional de ~4.6 MB e abre o UNIFAP Lab Manager imediatamente.*
-Consulte o [Guia de Execução Web e Intranet](file:///docs/WEB-DEPLOYMENT.md) para detalhes de hospedagem no IIS/Apache ou GitHub.
+> **Alternativas memoráveis:**
+> - `irm tinyurl.com/unifap-lab | iex`
+> - `irm https://raw.githubusercontent.com/RivaldoMascarenhas/superscript/main/lab.ps1 | iex`
+
+*O bootstrapper detecta permissões, instala o .NET 8 Desktop Runtime automaticamente caso necessário, baixa o pacote institucional e abre o UNIFAP Lab Manager imediatamente.*
 
 ---
 
