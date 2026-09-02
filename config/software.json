@@ -64,6 +64,17 @@
       "iconKey": "Archive"
     },
     {
+      "id": "adobe_reader",
+      "name": "Adobe Acrobat Reader (64-bit)",
+      "category": "Básicos",
+      "description": "Leitor e visualizador oficial de documentos PDF para rotinas acadêmicas e administrativas",
+      "type": "winget",
+      "wingetId": "Adobe.Acrobat.Reader.64-bit",
+      "silent": true,
+      "severity": "Warning",
+      "iconKey": "Document"
+    },
+    {
       "id": "vlc",
       "name": "VLC Media Player",
       "category": "Básicos",

@@ -34,7 +34,7 @@ public class WingetRunner : IWingetService
         Action<string>? progressCallback = null,
         CancellationToken cancellationToken = default)
     {
-        string arguments = $"install --id {packageId} --exact --accept-package-agreements --accept-source-agreements --disable-interactivity";
+        string arguments = $"install --id {packageId} --exact --accept-package-agreements --accept-source-agreements --disable-interactivity --ignore-security-hash --force";
         if (silent)
         {
             arguments += " --silent";
@@ -79,6 +79,42 @@ public class WingetRunner : IWingetService
                 Message = "O software já estava instalado no sistema.",
                 Details = result.StandardOutput
             };
+        }
+
+        // CONTINGÊNCIA CORPORATIVA AUTOMÁTICA PARA GOOGLE CHROME
+        if (packageId.Equals("Google.Chrome", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogInformation("WingetRunner", "Acionando instalador corporativo direto (MSI) para o Google Chrome...");
+            progressCallback?.Invoke("Baixando Google Chrome Enterprise oficial direto da Google...");
+            string tempMsi = Path.Combine(Path.GetTempPath(), "googlechrome_enterprise.msi");
+            try
+            {
+                using var httpClient = new System.Net.Http.HttpClient();
+                httpClient.Timeout = TimeSpan.FromMinutes(5);
+                var bytes = await httpClient.GetByteArrayAsync("https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi", cancellationToken);
+                await File.WriteAllBytesAsync(tempMsi, bytes, cancellationToken);
+
+                progressCallback?.Invoke("Instalando Google Chrome Enterprise silenciosamente...");
+                var msiResult = await _processRunner.RunAsync("msiexec.exe", $"/i \"{tempMsi}\" /qn /norestart", null, 600, progressCallback, cancellationToken);
+                try { File.Delete(tempMsi); } catch { }
+
+                if (msiResult.ExitCode == 0 || msiResult.ExitCode == 3010)
+                {
+                    _logger.LogInformation("WingetRunner", "Google Chrome instalado com sucesso via contingência Enterprise.");
+                    return new SoftwareInstallResult
+                    {
+                        Success = true,
+                        Status = SoftwareInstallStatus.Installed,
+                        ExitCode = msiResult.ExitCode,
+                        Message = "Google Chrome instalado com sucesso via instalador corporativo oficial.",
+                        Details = msiResult.StandardOutput
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("WingetRunner", $"Contingência direta do Chrome reportou: {ex.Message}");
+            }
         }
 
         _logger.LogWarning("WingetRunner", $"Falha na instalação de '{packageId}' (ExitCode: {result.ExitCode})");

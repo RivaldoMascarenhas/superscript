@@ -124,6 +124,18 @@ public class ExecutionViewModel : ViewModelBase
             CurrentJob = job;
             UpdateProgress();
 
+            // Atualiza status das etapas
+            foreach (var step in job.Steps)
+            {
+                var existing = Steps.FirstOrDefault(s => s.Id == step.Id);
+                if (existing != null)
+                {
+                    existing.Status = step.Status;
+                    existing.ErrorMessage = step.ErrorMessage;
+                    existing.Details = step.Details;
+                }
+            }
+
             // Atualiza fila de software
             SoftwareQueue.Clear();
             foreach (var sw in job.SoftwareQueue) SoftwareQueue.Add(sw);
@@ -159,6 +171,9 @@ public class ExecutionViewModel : ViewModelBase
             var existing = Steps.FirstOrDefault(s => s.Id == step.Id);
             if (existing != null)
             {
+                existing.Status = step.Status;
+                existing.ErrorMessage = step.ErrorMessage;
+                existing.Details = step.Details;
                 int index = Steps.IndexOf(existing);
                 Steps[index] = step;
             }

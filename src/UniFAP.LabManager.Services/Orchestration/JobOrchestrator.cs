@@ -107,7 +107,7 @@ public class JobOrchestrator : IJobOrchestrator
             // REGRA 25: O perfil Administrativo NUNCA deve instalar softwares específicos de laboratório, garantido pelo código.
             var adminAllowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
-                "chrome", "firefox", "office365", "winrar"
+                "chrome", "firefox", "office365", "winrar", "adobe_reader"
             };
             if (_configService.Profiles.Administrative?.Software != null)
             {
