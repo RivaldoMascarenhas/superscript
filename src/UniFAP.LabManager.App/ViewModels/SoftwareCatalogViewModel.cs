@@ -329,17 +329,24 @@ public class SoftwareCatalogViewModel : ViewModelBase
 
         try
         {
-            var res = await _softwareService.InstallAsync(sw, dryRun: false, msg => OperationStatus = msg);
+            _logger.LogInformation("Softwares", $"Iniciando instalação de '{sw.Name}' ({sw.WingetId})...");
+            var res = await _softwareService.InstallAsync(sw, dryRun: false, msg =>
+            {
+                OperationStatus = msg;
+                _logger.LogInformation("Softwares", msg);
+            });
             sw.Status = res.Status;
             sw.ErrorMessage = res.Message;
 
             if (res.Success && res.Status == SoftwareInstallStatus.Installed)
             {
                 OperationStatus = $"✓ {sw.Name} instalado com sucesso!";
+                _logger.LogInformation("Softwares", $"✓ {sw.Name} instalado com sucesso.");
             }
             else if (res.Status == SoftwareInstallStatus.Warning)
             {
                 OperationStatus = $"⚠️ {sw.Name}: {res.Message}";
+                _logger.LogWarning("Softwares", $"⚠️ {sw.Name}: {res.Message}");
             }
             else
             {
@@ -382,6 +389,7 @@ public class SoftwareCatalogViewModel : ViewModelBase
 
         IsBusy = true;
         OperationStatus = $"Desinstalando {sw.Name}...";
+        _logger.LogInformation("Softwares", $"Iniciando desinstalação de '{sw.Name}' ({sw.WingetId})...");
         sw.Status = SoftwareInstallStatus.Installing;
         try
         {
@@ -389,6 +397,7 @@ public class SoftwareCatalogViewModel : ViewModelBase
             if (uninstalled)
             {
                 OperationStatus = $"✓ {sw.Name} foi desinstalado com sucesso.";
+                _logger.LogInformation("Softwares", $"✓ {sw.Name} desinstalado com sucesso.");
                 sw.Status = SoftwareInstallStatus.Pending;
                 sw.ErrorMessage = null;
                 FilterSoftware();
@@ -396,6 +405,7 @@ public class SoftwareCatalogViewModel : ViewModelBase
             else
             {
                 OperationStatus = $"✗ Não foi possível desinstalar {sw.Name}.";
+                _logger.LogWarning("Softwares", $"✗ Falha ao desinstalar {sw.Name}.");
                 sw.Status = SoftwareInstallStatus.Installed;
                 System.Windows.MessageBox.Show(
                     $"Não foi possível desinstalar '{sw.Name}'. O pacote pode exigir desinstalação manual.",
@@ -408,6 +418,7 @@ public class SoftwareCatalogViewModel : ViewModelBase
         {
             sw.Status = SoftwareInstallStatus.Installed;
             OperationStatus = $"Erro ao desinstalar {sw.Name}: {ex.Message}";
+            _logger.LogError("Softwares", $"Erro ao desinstalar {sw.Name}", ex);
         }
         finally
         {
@@ -421,15 +432,18 @@ public class SoftwareCatalogViewModel : ViewModelBase
 
         IsBusy = true;
         OperationStatus = $"Reparando {sw.Name}...";
+        _logger.LogInformation("Softwares", $"Reparando/reinstalando '{sw.Name}' ({sw.WingetId})...");
         try
         {
             bool repaired = await _softwareService.RepairAsync(sw);
             OperationStatus = repaired ? $"{sw.Name} reparado com sucesso." : $"Não foi possível reparar {sw.Name}.";
+            _logger.LogInformation("Softwares", repaired ? $"✓ {sw.Name} reparado com sucesso." : $"✗ Falha ao reparar {sw.Name}.");
             sw.Status = repaired ? SoftwareInstallStatus.Installed : SoftwareInstallStatus.Warning;
         }
         catch (Exception ex)
         {
             OperationStatus = $"Erro no reparo: {ex.Message}";
+            _logger.LogError("Softwares", $"Erro ao reparar {sw.Name}", ex);
         }
         finally
         {

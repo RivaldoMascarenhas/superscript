@@ -149,6 +149,40 @@
 
             <!-- CONTEÚDO DINÂMICO (VIEW ATIVA) -->
             <ContentControl Grid.Row="1" Content="{Binding CurrentViewModel}" />
+
+            <!-- ================= CONSOLE GLOBAL DE EXECUÇÃO EM TEMPO REAL ================= -->
+            <Border Grid.Row="2" Background="{StaticResource AppBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="20,8,20,12">
+                <StackPanel>
+                    <!-- CABEÇALHO DO CONSOLE -->
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="💻 CONSOLE DE EXECUÇÃO EM TEMPO REAL" FontSize="11" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" VerticalAlignment="Center" />
+                            <TextBlock Text="•" Foreground="{StaticResource TextMutedBrush}" Margin="8,0" VerticalAlignment="Center" />
+                            <Ellipse Width="7" Height="7" Fill="#10B981" Margin="0,0,5,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Ao vivo" FontSize="11" Foreground="#10B981" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <TextBlock Text="{Binding LastLogSummary}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="600" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Content="Limpar" Command="{Binding ClearConsoleCommand}" Style="{StaticResource SecondaryButton}" Padding="8,3" FontSize="10" Margin="0,0,6,0" />
+                            <Button Content="{Binding ConsoleToggleText}" Command="{Binding ToggleConsoleCommand}" Style="{StaticResource SecondaryButton}" Padding="8,3" FontSize="10" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- CAIXA DO TERMINAL (VISÍVEL QUANDO IsConsoleVisible == True) -->
+                    <Border Visibility="{Binding IsConsoleVisible, Converter={StaticResource BoolToVis}}" 
+                            Background="#020617" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12" Height="140">
+                        <ScrollViewer x:Name="GlobalConsoleScrollViewer" VerticalScrollBarVisibility="Auto">
+                            <TextBlock Text="{Binding LiveLogOutput}" FontFamily="{StaticResource CodeFont}" FontSize="11" Foreground="#A7F3D0" TextWrapping="Wrap" />
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </Border>
         </Grid>
     </Grid>
 </Window>

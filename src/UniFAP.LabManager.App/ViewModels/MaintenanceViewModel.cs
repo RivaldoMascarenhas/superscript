@@ -99,6 +99,7 @@ public class MaintenanceViewModel : ViewModelBase
         string entry = $"[{DateTime.Now:HH:mm:ss}] {message}";
         ActionLog += entry + Environment.NewLine;
         ExecutionStatus = message;
+        _logger.LogInformation("Ferramentas", message);
     }
 
     private async Task ApplyWallpaperAsync()

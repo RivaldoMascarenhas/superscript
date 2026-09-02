@@ -40,6 +40,37 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _isBusy, value);
     }
 
+    private string _liveLogOutput = string.Empty;
+    public string LiveLogOutput
+    {
+        get => _liveLogOutput;
+        set => SetProperty(ref _liveLogOutput, value);
+    }
+
+    private string _lastLogSummary = "Aguardando operações...";
+    public string LastLogSummary
+    {
+        get => _lastLogSummary;
+        set => SetProperty(ref _lastLogSummary, value);
+    }
+
+    private bool _isConsoleVisible = true;
+    public bool IsConsoleVisible
+    {
+        get => _isConsoleVisible;
+        set
+        {
+            if (SetProperty(ref _isConsoleVisible, value))
+            {
+                OnPropertyChanged(nameof(ConsoleToggleText));
+            }
+        }
+    }
+
+    public string ConsoleToggleText => IsConsoleVisible ? "▼ Recolher" : "▲ Expandir";
+
+    public event Action? OnLogAppended;
+
     // ViewModels filhas
     public DashboardViewModel DashboardVM { get; }
     public PreparationViewModel PreparationVM { get; }
@@ -51,7 +82,7 @@ public class MainViewModel : ViewModelBase
     public SettingsViewModel SettingsVM { get; }
     public AboutViewModel AboutVM { get; }
 
-    // Comandos de navegação
+    // Comandos de navegação e do console
     public ICommand NavigateDashboardCommand { get; }
     public ICommand NavigatePreparationCommand { get; }
     public ICommand NavigateExecutionCommand { get; }
@@ -61,6 +92,8 @@ public class MainViewModel : ViewModelBase
     public ICommand NavigateHistoryCommand { get; }
     public ICommand NavigateSettingsCommand { get; }
     public ICommand NavigateAboutCommand { get; }
+    public ICommand ToggleConsoleCommand { get; }
+    public ICommand ClearConsoleCommand { get; }
 
     public MainViewModel(
         IConfigService configService,
@@ -101,6 +134,33 @@ public class MainViewModel : ViewModelBase
         NavigateHistoryCommand = new RelayCommand(() => CurrentViewModel = HistoryVM);
         NavigateSettingsCommand = new RelayCommand(() => CurrentViewModel = SettingsVM);
         NavigateAboutCommand = new RelayCommand(() => CurrentViewModel = AboutVM);
+
+        ToggleConsoleCommand = new RelayCommand(() => IsConsoleVisible = !IsConsoleVisible);
+        ClearConsoleCommand = new RelayCommand(() =>
+        {
+            LiveLogOutput = string.Empty;
+            LastLogSummary = "Console limpo.";
+        });
+
+        LiveLogOutput = $"[{DateTime.Now:HH:mm:ss}] [SISTEMA] UniFAP Lab Manager inicializado. Monitoramento ativo em segundo plano.{Environment.NewLine}";
+
+        _logger.OnLogEmitted += (source, level, message) =>
+        {
+            System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
+            {
+                string timestamp = DateTime.Now.ToString("HH:mm:ss");
+                string line = $"[{timestamp}] [{level}] [{source}] {message}{Environment.NewLine}";
+                LiveLogOutput += line;
+                LastLogSummary = $"[{source}] {message}";
+
+                if (LiveLogOutput.Length > 150000)
+                {
+                    LiveLogOutput = LiveLogOutput.Substring(LiveLogOutput.Length - 100000);
+                }
+
+                OnLogAppended?.Invoke();
+            });
+        };
 
         // Inicia na Dashboard
         CurrentViewModel = DashboardVM;

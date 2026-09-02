@@ -30,6 +30,9 @@ public partial class MainWindow : Window
         _viewModel.DashboardVM.OnNavigateToDiagnosticsRequested += () => _viewModel.CurrentViewModel = _viewModel.DiagnosticsVM;
         _viewModel.ExecutionVM.OnReturnToDashboardRequested += () => _viewModel.CurrentViewModel = _viewModel.DashboardVM;
 
+        // Auto-scroll do terminal global de logs
+        _viewModel.OnLogAppended += () => Dispatcher.Invoke(() => GlobalConsoleScrollViewer?.ScrollToEnd());
+
         Loaded += async (s, e) => await _viewModel.InitializeAsync();
     }
 
