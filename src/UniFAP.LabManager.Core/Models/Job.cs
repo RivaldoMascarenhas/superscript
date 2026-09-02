@@ -30,6 +30,7 @@ public class Job
     public string? DomainUsername { get; set; }
     [System.Text.Json.Serialization.JsonIgnore]
     public string? DomainPasswordText { get; set; }
+    public string? NewComputerName { get; set; }
 
     public double CalculateProgress()
     {

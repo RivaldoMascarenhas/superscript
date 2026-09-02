@@ -54,7 +54,8 @@ public interface IJobOrchestrator
         List<string>? customSoftwareIds = null,
         bool dryRun = false,
         bool? joinDomain = null,
-        string? supportPassword = null);
+        string? supportPassword = null,
+        string? newComputerName = null);
     Task<bool> StartJobAsync(Job job, CancellationToken cancellationToken = default);
     Task CancelJobAsync();
     Task<Job?> CheckForPendingResumedJobAsync();

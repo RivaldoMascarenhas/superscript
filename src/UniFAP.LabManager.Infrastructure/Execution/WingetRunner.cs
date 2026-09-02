@@ -117,6 +117,43 @@ public class WingetRunner : IWingetService
             }
         }
 
+        // CONTINGÊNCIA CORPORATIVA AUTOMÁTICA PARA MOZILLA FIREFOX
+        if (packageId.Equals("Mozilla.Firefox", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogInformation("WingetRunner", "Acionando instalador corporativo direto (MSI) para o Mozilla Firefox...");
+            progressCallback?.Invoke("Baixando Mozilla Firefox oficial da Mozilla...");
+            string tempFirefoxMsi = Path.Combine(Path.GetTempPath(), "firefox_installer.msi");
+            try
+            {
+                using var httpClient = new System.Net.Http.HttpClient();
+                httpClient.Timeout = TimeSpan.FromMinutes(5);
+                // URL oficial do instalador MSI 64-bit em pt-BR da Mozilla
+                var bytes = await httpClient.GetByteArrayAsync("https://download.mozilla.org/?product=firefox-msi-latest-ssl&os=win64&lang=pt-BR", cancellationToken);
+                await File.WriteAllBytesAsync(tempFirefoxMsi, bytes, cancellationToken);
+
+                progressCallback?.Invoke("Instalando Mozilla Firefox silenciosamente...");
+                var msiResult = await _processRunner.RunAsync("msiexec.exe", $"/i \"{tempFirefoxMsi}\" /qn /norestart", null, 600, progressCallback, cancellationToken);
+                try { File.Delete(tempFirefoxMsi); } catch { }
+
+                if (msiResult.ExitCode == 0 || msiResult.ExitCode == 3010)
+                {
+                    _logger.LogInformation("WingetRunner", "Mozilla Firefox instalado com sucesso via contingência oficial Mozilla.");
+                    return new SoftwareInstallResult
+                    {
+                        Success = true,
+                        Status = SoftwareInstallStatus.Installed,
+                        ExitCode = msiResult.ExitCode,
+                        Message = "Mozilla Firefox instalado com sucesso via instalador oficial Mozilla.",
+                        Details = msiResult.StandardOutput
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("WingetRunner", $"Contingência direta do Firefox reportou: {ex.Message}");
+            }
+        }
+
         _logger.LogWarning("WingetRunner", $"Falha na instalação de '{packageId}' (ExitCode: {result.ExitCode})");
         return new SoftwareInstallResult
         {

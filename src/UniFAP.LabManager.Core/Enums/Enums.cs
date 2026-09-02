@@ -29,6 +29,7 @@ public enum StepStatus
 public enum StepType
 {
     PreCheck,
+    ComputerName,
     Windows,
     Users,
     Branding,

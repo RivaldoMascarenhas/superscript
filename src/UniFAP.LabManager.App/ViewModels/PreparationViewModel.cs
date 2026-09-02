@@ -30,6 +30,15 @@ public class PreparationViewModel : ViewModelBase
     private string _supportAdminPasswordConfirm = string.Empty;
     private bool _isAdministrativeJoinAdChecked = true;
     private string _validationErrorMessage = string.Empty;
+    private string _newComputerName = string.Empty;
+
+    public string NewComputerName
+    {
+        get => _newComputerName;
+        set => SetProperty(ref _newComputerName, value);
+    }
+
+    public string CurrentMachineName => Environment.MachineName;
 
     public bool IsAdministrativeJoinAdChecked
     {
@@ -427,7 +436,8 @@ public class PreparationViewModel : ViewModelBase
             selectedSoftwareIds,
             dryRun: dryRun,
             joinDomain: shouldJoinAd,
-            supportPassword: SupportAdminPassword);
+            supportPassword: SupportAdminPassword,
+            newComputerName: NewComputerName?.Trim());
 
         job.DomainUsername = domainUser;
         job.DomainPasswordText = domainPass;

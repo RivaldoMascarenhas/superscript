@@ -69,7 +69,8 @@ public class JobOrchestrator : IJobOrchestrator
         List<string>? customSoftwareIds = null,
         bool dryRun = false,
         bool? joinDomain = null,
-        string? supportPassword = null)
+        string? supportPassword = null,
+        string? newComputerName = null)
     {
         var profile = _configService.GetProfile(profileId);
         string profileName = profile?.DisplayName ?? (computerType == ComputerType.Administrative ? "Administrativo Institucional" : "Laboratório Personalizado");
@@ -85,7 +86,8 @@ public class JobOrchestrator : IJobOrchestrator
             TargetComputerName = Environment.MachineName,
             AutoReboot = _configService.Settings.AutoReboot,
             AutoResume = _configService.Settings.AutoResume,
-            SupportPasswordText = supportPassword
+            SupportPasswordText = supportPassword,
+            NewComputerName = !string.IsNullOrWhiteSpace(newComputerName) ? newComputerName.Trim().ToUpperInvariant() : null
         };
 
         // Construir Lista de Softwares
@@ -128,6 +130,12 @@ public class JobOrchestrator : IJobOrchestrator
 
         // Construir Etapas do Job
         job.Steps.Add(new JobStep { Type = StepType.PreCheck, Name = "Validação Prévia do Sistema", Description = "Verificação de requisitos, espaço, conectividade e permissões", IsCritical = true });
+
+        if (!string.IsNullOrWhiteSpace(job.NewComputerName))
+        {
+            job.Steps.Add(new JobStep { Type = StepType.ComputerName, Name = $"Renomear Computador → {job.NewComputerName}", Description = $"Renomeação da máquina para o tombamento de patrimônio '{job.NewComputerName}'", IsCritical = false });
+        }
+
         job.Steps.Add(new JobStep { Type = StepType.Windows, Name = "Padronização do Windows 11", Description = "Aplicação das diretivas e configurações base da UniFAP", IsCritical = false });
         job.Steps.Add(new JobStep { Type = StepType.Users, Name = "Provisionamento de Usuários", Description = "Criação das contas 'suporte' (Admin) e 'aluno' (Padrão)", IsCritical = false });
         job.Steps.Add(new JobStep { Type = StepType.Branding, Name = "Identidade Visual UniFAP", Description = "Aplicação de papel de parede institucional e dados OEM", IsCritical = false });
@@ -327,6 +335,53 @@ public class JobOrchestrator : IJobOrchestrator
                         return false;
                     }
                     return true;
+
+                case StepType.ComputerName:
+                    if (string.IsNullOrWhiteSpace(job.NewComputerName))
+                    {
+                        step.Details = "Nenhum nome de computador informado. Etapa ignorada.";
+                        return true;
+                    }
+                    if (Environment.MachineName.Equals(job.NewComputerName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        step.Details = $"O computador já possui o nome '{job.NewComputerName}'. Nenhuma alteração necessária.";
+                        return true;
+                    }
+                    if (job.DryRun)
+                    {
+                        step.Details = $"[DRY-RUN] Renomearia o computador de '{Environment.MachineName}' para '{job.NewComputerName}'.";
+                        return true;
+                    }
+                    EmitLog($"Renomeando computador de '{Environment.MachineName}' para '{job.NewComputerName}'...");
+                    var renameProc = new System.Diagnostics.Process
+                    {
+                        StartInfo = new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = "powershell.exe",
+                            Arguments = $"-NoProfile -Command \"Rename-Computer -NewName '{job.NewComputerName}' -Force -ErrorAction Stop\"",
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        }
+                    };
+                    renameProc.Start();
+                    string renameOutput = await renameProc.StandardOutput.ReadToEndAsync(token);
+                    string renameError = await renameProc.StandardError.ReadToEndAsync(token);
+                    await renameProc.WaitForExitAsync(token);
+                    if (renameProc.ExitCode == 0)
+                    {
+                        job.TargetComputerName = job.NewComputerName;
+                        job.NeedsReboot = true;
+                        step.Details = $"Computador renomeado com sucesso para '{job.NewComputerName}'. A alteração será efetivada após o reboot.";
+                        EmitLog($"Computador renomeado para '{job.NewComputerName}' com sucesso.");
+                        return true;
+                    }
+                    else
+                    {
+                        step.ErrorMessage = $"Falha ao renomear: {renameError}";
+                        return false;
+                    }
 
                 case StepType.Windows:
                     return await _windowsService.ApplyOptimizationsAsync(job.DryRun);
