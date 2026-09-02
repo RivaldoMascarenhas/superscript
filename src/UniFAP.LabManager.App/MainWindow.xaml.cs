@@ -23,6 +23,7 @@ public partial class MainWindow : Window
         _viewModel.PreparationVM.OnPromptActiveDirectoryCredentials += PromptActiveDirectoryCredentialsAsync;
 
         // Conectar evento do diálogo modal de senha do usuário suporte
+        _viewModel.PreparationVM.OnPromptSupportPassword += PromptSupportPasswordAsync;
         _viewModel.MaintenanceVM.OnPromptSupportPassword += PromptSupportPasswordAsync;
 
         // Conectar navegações rápidas da Dashboard

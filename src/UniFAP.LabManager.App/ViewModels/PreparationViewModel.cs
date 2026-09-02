@@ -16,6 +16,7 @@ public class PreparationViewModel : ViewModelBase
 
     public event Action<Job>? OnExecutionStarted;
     public event Func<ActiveDirectoryConfig, Task<(bool success, string username, string password)>>? OnPromptActiveDirectoryCredentials;
+    public event Func<Task<(bool success, string password)>>? OnPromptSupportPassword;
 
     private ComputerType _selectedComputerType = ComputerType.Administrative;
     private string _selectedProfileId = "geral";
@@ -365,9 +366,30 @@ public class PreparationViewModel : ViewModelBase
     private async Task LaunchExecutionAsync(bool dryRun)
     {
         // Validar obrigatoriedade de senha do usuário suporte
-        if (!dryRun && !ValidatePasswords())
+        if (!dryRun)
         {
-            return;
+            if (string.IsNullOrWhiteSpace(SupportAdminPassword))
+            {
+                if (OnPromptSupportPassword != null)
+                {
+                    var promptResult = await OnPromptSupportPassword.Invoke();
+                    if (!promptResult.success || string.IsNullOrWhiteSpace(promptResult.password))
+                    {
+                        _logger.LogInformation("PreparationViewModel", "Técnico cancelou a definição de senha do suporte.");
+                        return;
+                    }
+                    SupportAdminPassword = promptResult.password;
+                    SupportAdminPasswordConfirm = promptResult.password;
+                }
+                else
+                {
+                    if (!ValidatePasswords()) return;
+                }
+            }
+            else
+            {
+                if (!ValidatePasswords()) return;
+            }
         }
 
         // 1. Se for administrativo e o toggle de AD estiver ativado, verificar credencial AD

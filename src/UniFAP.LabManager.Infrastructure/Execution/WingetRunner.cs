@@ -34,7 +34,7 @@ public class WingetRunner : IWingetService
         Action<string>? progressCallback = null,
         CancellationToken cancellationToken = default)
     {
-        string arguments = $"install --id {packageId} --exact --source winget --accept-package-agreements --accept-source-agreements --disable-interactivity";
+        string arguments = $"install --id {packageId} --exact --accept-package-agreements --accept-source-agreements --disable-interactivity";
         if (silent)
         {
             arguments += " --silent";
@@ -51,7 +51,11 @@ public class WingetRunner : IWingetService
         // -1978335212 (0x8A150014): Pacote já instalado
         // -1978335216: Nenhuma versão aplicável encontrada
 
-        if (result.ExitCode == 0 || result.ExitCode == 3010 || result.ExitCode == unchecked((int)0x8A15002B))
+        bool isExplicitSuccess = result.ExitCode == 0 || result.ExitCode == 3010 || result.ExitCode == unchecked((int)0x8A15002B) ||
+                                 result.StandardOutput.Contains("Successfully installed", StringComparison.OrdinalIgnoreCase) ||
+                                 result.StandardOutput.Contains("Instalado com êxito", StringComparison.OrdinalIgnoreCase);
+
+        if (isExplicitSuccess)
         {
             _logger.LogInformation("WingetRunner", $"Pacote '{packageId}' instalado com sucesso (ExitCode: {result.ExitCode})");
             return new SoftwareInstallResult

@@ -47,7 +47,7 @@
       "entryPoint": "setup.exe",
       "arguments": "/configure configuration.xml",
       "silent": true,
-      "severity": "Critical",
+      "severity": "Warning",
       "iconKey": "Office"
     },
     {

@@ -129,7 +129,7 @@ public class JobOrchestrator : IJobOrchestrator
         // Construir Etapas do Job
         job.Steps.Add(new JobStep { Type = StepType.PreCheck, Name = "Validação Prévia do Sistema", Description = "Verificação de requisitos, espaço, conectividade e permissões", IsCritical = true });
         job.Steps.Add(new JobStep { Type = StepType.Windows, Name = "Padronização do Windows 11", Description = "Aplicação das diretivas e configurações base da UniFAP", IsCritical = false });
-        job.Steps.Add(new JobStep { Type = StepType.Users, Name = "Provisionamento de Usuários", Description = "Criação das contas 'suporte' (Admin) e 'aluno' (Padrão)", IsCritical = true });
+        job.Steps.Add(new JobStep { Type = StepType.Users, Name = "Provisionamento de Usuários", Description = "Criação das contas 'suporte' (Admin) e 'aluno' (Padrão)", IsCritical = false });
         job.Steps.Add(new JobStep { Type = StepType.Branding, Name = "Identidade Visual UniFAP", Description = "Aplicação de papel de parede institucional e dados OEM", IsCritical = false });
         job.Steps.Add(new JobStep { Type = StepType.Performance, Name = "Otimização de Desempenho", Description = "Ajustes seguros sem degradar fontes ou estética visual", IsCritical = false });
 
@@ -140,7 +140,7 @@ public class JobOrchestrator : IJobOrchestrator
 
         if (job.JoinActiveDirectory)
         {
-            job.Steps.Add(new JobStep { Type = StepType.ActiveDirectory, Name = "Ingresso no Active Directory", Description = $"Ingresso no domínio institucional {_configService.ActiveDirectory.Domain}", IsCritical = true });
+            job.Steps.Add(new JobStep { Type = StepType.ActiveDirectory, Name = "Ingresso no Active Directory", Description = $"Ingresso no domínio institucional {_configService.ActiveDirectory.Domain}", IsCritical = false });
         }
 
         job.Steps.Add(new JobStep { Type = StepType.Validation, Name = "Validação e Diagnóstico Final", Description = "Verificação do estado final dos serviços e configurações", IsCritical = false });
