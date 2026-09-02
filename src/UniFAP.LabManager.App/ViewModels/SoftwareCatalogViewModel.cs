@@ -261,19 +261,42 @@ public class SoftwareCatalogViewModel : ViewModelBase
         IsBusy = true;
         OperationStatus = $"Instalando {sw.Name}...";
         sw.Status = SoftwareInstallStatus.Installing;
+        sw.ErrorMessage = null;
 
         try
         {
             var res = await _softwareService.InstallAsync(sw, dryRun: false, msg => OperationStatus = msg);
             sw.Status = res.Status;
             sw.ErrorMessage = res.Message;
-            OperationStatus = res.Success ? $"{sw.Name} instalado com sucesso!" : $"Falha ao instalar {sw.Name}.";
+
+            if (res.Success && res.Status == SoftwareInstallStatus.Installed)
+            {
+                OperationStatus = $"✓ {sw.Name} instalado com sucesso!";
+            }
+            else if (res.Status == SoftwareInstallStatus.Warning)
+            {
+                OperationStatus = $"⚠️ {sw.Name}: {res.Message}";
+            }
+            else
+            {
+                OperationStatus = $"✗ Falha ao instalar {sw.Name}: {res.Message}";
+                System.Windows.MessageBox.Show(
+                    $"Não foi possível instalar '{sw.Name}'.\n\nDetalhes:\n{res.Message}",
+                    "Instalação de Software — UniFAP",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
+            }
         }
         catch (Exception ex)
         {
             sw.Status = SoftwareInstallStatus.Failed;
             sw.ErrorMessage = ex.Message;
-            OperationStatus = $"Erro: {ex.Message}";
+            OperationStatus = $"Erro ao instalar {sw.Name}: {ex.Message}";
+            System.Windows.MessageBox.Show(
+                $"Erro inesperado ao instalar '{sw.Name}':\n\n{ex.Message}",
+                "Erro de Instalação — UniFAP",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Error);
         }
         finally
         {

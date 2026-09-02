@@ -1,9 +1,18 @@
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using UniFAP.LabManager.Core.Enums;
 
 namespace UniFAP.LabManager.Core.Models;
 
-public class SoftwareItem
+public class SoftwareItem : INotifyPropertyChanged
 {
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Category { get; set; } = "Básicos";
@@ -21,9 +30,54 @@ public class SoftwareItem
     public SoftwareSeverity Severity { get; set; } = SoftwareSeverity.Warning;
     public bool Legacy { get; set; } = false;
     public string IconKey { get; set; } = "Package";
-    public bool IsSelected { get; set; } = false;
-    public SoftwareInstallStatus Status { get; set; } = SoftwareInstallStatus.Pending;
-    public string? ErrorMessage { get; set; }
+
+    private bool _isSelected = false;
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set
+        {
+            if (_isSelected != value)
+            {
+                _isSelected = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    private SoftwareInstallStatus _status = SoftwareInstallStatus.Pending;
+    public SoftwareInstallStatus Status
+    {
+        get => _status;
+        set
+        {
+            if (_status != value)
+            {
+                _status = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsInstalling));
+                OnPropertyChanged(nameof(IsInstalled));
+                OnPropertyChanged(nameof(IsFailed));
+                OnPropertyChanged(nameof(ButtonText));
+                OnPropertyChanged(nameof(StatusDisplay));
+            }
+        }
+    }
+
+    private string? _errorMessage;
+    public string? ErrorMessage
+    {
+        get => _errorMessage;
+        set
+        {
+            if (_errorMessage != value)
+            {
+                _errorMessage = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
     public int EstimatedSeconds { get; set; } = 45;
 
     // Catálogo e rastreabilidade (UniFAP + WinUtil)
@@ -34,4 +88,26 @@ public class SoftwareItem
     public bool Enabled { get; set; } = true;
     public string? Hash { get; set; }
     public string? ChocoId { get; set; }
+
+    // Helpers reativos para binding WPF
+    public bool IsInstalling => Status == SoftwareInstallStatus.Installing;
+    public bool IsInstalled => Status == SoftwareInstallStatus.Installed;
+    public bool IsFailed => Status == SoftwareInstallStatus.Failed;
+
+    public string ButtonText => Status switch
+    {
+        SoftwareInstallStatus.Installing => "Instalando...",
+        SoftwareInstallStatus.Installed => "✓ Instalado",
+        SoftwareInstallStatus.Failed => "Reinstalar",
+        _ => "Instalar"
+    };
+
+    public string StatusDisplay => Status switch
+    {
+        SoftwareInstallStatus.Installing => "Instalando...",
+        SoftwareInstallStatus.Installed => "Instalado",
+        SoftwareInstallStatus.Failed => "Falha na instalação",
+        SoftwareInstallStatus.Warning => "Aviso",
+        _ => "Pendente"
+    };
 }

@@ -190,7 +190,7 @@
       "category": "Desenvolvimento",
       "description": "IDE clássica e leve para C/C++",
       "type": "winget",
-      "wingetId": "Embarcadero.Dev-Cpp",
+      "wingetId": "Embarcadero.Dev-C++",
       "silent": true,
       "severity": "Optional",
       "iconKey": "Cpp"
@@ -201,7 +201,7 @@
       "category": "Banco de Dados",
       "description": "Sistema de banco de dados relacional objeto-relacional",
       "type": "winget",
-      "wingetId": "PostgreSQL.PostgreSQL",
+      "wingetId": "PostgreSQL.PostgreSQL.16",
       "silent": true,
       "severity": "Warning",
       "iconKey": "Database"
@@ -212,7 +212,7 @@
       "category": "Banco de Dados",
       "description": "Interface gráfica de gerenciamento para PostgreSQL",
       "type": "winget",
-      "wingetId": "PostgreSQL.pgAdmin4",
+      "wingetId": "PostgreSQL.pgAdmin",
       "silent": true,
       "severity": "Optional",
       "iconKey": "DatabaseSearch"
@@ -256,7 +256,7 @@
       "category": "GIS",
       "description": "Globo virtual em 3D e visualização geoespacial",
       "type": "winget",
-      "wingetId": "Google.GoogleEarthPro",
+      "wingetId": "Google.EarthPro",
       "silent": true,
       "severity": "Optional",
       "iconKey": "Globe"
