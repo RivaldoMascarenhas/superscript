@@ -46,24 +46,71 @@ $urlsToTry = @(
 # 3. Verificar pre-requisito: .NET 8 Desktop Runtime
 Write-Host "[1/4] Verificando Microsoft .NET 8 Desktop Runtime..." -ForegroundColor Yellow
 $hasDotNet8 = $false
-try {
-    $runtimes = dotnet --list-runtimes 2>$null
-    if ($runtimes -match "Microsoft\.WindowsDesktop\.App 8\.") {
+
+# 3.1 Checagem direta nos diretorios fisicos de runtime
+$systemDesktopRuntime = "$env:ProgramFiles\dotnet\shared\Microsoft.WindowsDesktop.App"
+$userDesktopRuntime = "$env:USERPROFILE\.dotnet\shared\Microsoft.WindowsDesktop.App"
+
+if (Test-Path $systemDesktopRuntime) {
+    $has8 = Get-ChildItem -Path $systemDesktopRuntime -Directory -Filter "8.*" -ErrorAction SilentlyContinue
+    if ($has8) {
         $hasDotNet8 = $true
+        $env:DOTNET_ROOT = "$env:ProgramFiles\dotnet"
     }
-} catch {
-    $hasDotNet8 = $false
 }
 
+if (-not $hasDotNet8 -and (Test-Path $userDesktopRuntime)) {
+    $hasUser8 = Get-ChildItem -Path $userDesktopRuntime -Directory -Filter "8.*" -ErrorAction SilentlyContinue
+    if ($hasUser8) {
+        $hasDotNet8 = $true
+        $env:DOTNET_ROOT = "$env:USERPROFILE\.dotnet"
+        try { [Environment]::SetEnvironmentVariable("DOTNET_ROOT", "$env:USERPROFILE\.dotnet", "User") } catch {}
+        try { [Environment]::SetEnvironmentVariable("DOTNET_ROOT", "$env:USERPROFILE\.dotnet", "Machine") } catch {}
+    }
+}
+
+# 3.2 Checagem via dotnet CLI se o comando estiver disponivel
 if (-not $hasDotNet8) {
-    Write-Host "   -> .NET 8 Desktop Runtime nao detectado. Instalando via WinGet..." -ForegroundColor Cyan
-    winget install Microsoft.DotNet.DesktopRuntime.8 --silent --accept-package-agreements --accept-source-agreements
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "   [AVISO] WinGet encontrou uma advertencia. Baixando instalador direto..." -ForegroundColor Yellow
-        $dotnetUrl = "https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe"
-        $dotnetInstaller = "$env:TEMP\dotnet8-desktop-runtime.exe"
-        Invoke-WebRequest -Uri $dotnetUrl -OutFile $dotnetInstaller -UseBasicParsing
-        Start-Process -FilePath $dotnetInstaller -ArgumentList "/install /quiet /norestart" -Wait
+    try {
+        $runtimes = dotnet --list-runtimes 2>$null
+        if ($runtimes -match "Microsoft\.WindowsDesktop\.App 8\.") {
+            $hasDotNet8 = $true
+            $dotnetCmdPath = (Get-Command dotnet -ErrorAction SilentlyContinue).Source
+            if ($dotnetCmdPath) {
+                $env:DOTNET_ROOT = Split-Path $dotnetCmdPath
+                try { [Environment]::SetEnvironmentVariable("DOTNET_ROOT", $env:DOTNET_ROOT, "User") } catch {}
+            }
+        }
+    } catch {
+        $hasDotNet8 = $false
+    }
+}
+
+# 3.3 Instalacao automatica caso o runtime nao exista
+if (-not $hasDotNet8) {
+    Write-Host "   -> .NET 8 Desktop Runtime nao detectado. Instalando..." -ForegroundColor Cyan
+    $installed = $false
+    $dotnetUrl = "https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe"
+    $dotnetInstaller = "$env:TEMP\dotnet8-desktop-runtime.exe"
+
+    try {
+        Write-Host "   -> Baixando Microsoft .NET 8 Desktop Runtime oficial..." -ForegroundColor DarkGray
+        Invoke-WebRequest -Uri $dotnetUrl -OutFile $dotnetInstaller -UseBasicParsing -TimeoutSec 60
+        if (Test-Path $dotnetInstaller) {
+            $p = Start-Process -FilePath $dotnetInstaller -ArgumentList "/install /quiet /norestart" -Wait -PassThru
+            if ($p.ExitCode -eq 0 -or $p.ExitCode -eq 3010) {
+                $installed = $true
+                $env:DOTNET_ROOT = "$env:ProgramFiles\dotnet"
+            }
+        }
+    } catch {
+        $installed = $false
+    }
+
+    if (-not $installed) {
+        Write-Host "   -> Tentando instalador alternativo via WinGet..." -ForegroundColor Yellow
+        winget install Microsoft.DotNet.DesktopRuntime.8 --silent --accept-package-agreements --accept-source-agreements
+        $env:DOTNET_ROOT = "$env:ProgramFiles\dotnet"
     }
 }
 Write-Host "   -> .NET 8 Runtime: [OK]" -ForegroundColor Green
@@ -180,6 +227,20 @@ if (Test-Path $exePath) {
 
 # 7. Execucao do UNIFAP Lab Manager
 Write-Host "[4/4] Inicializando o UNIFAP Lab Manager..." -ForegroundColor Cyan
+
+# Propagar DOTNET_ROOT para o processo atual e registrar no sistema
+if (-not $env:DOTNET_ROOT) {
+    if (Test-Path "$env:ProgramFiles\dotnet\shared\Microsoft.WindowsDesktop.App") {
+        $env:DOTNET_ROOT = "$env:ProgramFiles\dotnet"
+    } elseif (Test-Path "$env:USERPROFILE\.dotnet\shared\Microsoft.WindowsDesktop.App") {
+        $env:DOTNET_ROOT = "$env:USERPROFILE\.dotnet"
+    }
+}
+if ($env:DOTNET_ROOT) {
+    try { [Environment]::SetEnvironmentVariable("DOTNET_ROOT", $env:DOTNET_ROOT, "User") } catch {}
+    try { [Environment]::SetEnvironmentVariable("DOTNET_ROOT", $env:DOTNET_ROOT, "Machine") } catch {}
+}
+
 Start-Process -FilePath $exePath -WorkingDirectory $InstallDir
 
 Write-Host "==========================================================" -ForegroundColor Green
