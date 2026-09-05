@@ -112,6 +112,8 @@ public class PerformanceService : IPerformanceService
             $gb = [Math]::Round($totalBytesCleaned / 1GB, 2)
             if ($gb -ge 1.0) {
                 Write-Output ""$gb GB liberados""
+            } elseif ($totalBytesCleaned -eq 0) {
+                Write-Output ""0 MB liberados (o sistema já estava limpo)""
             } else {
                 Write-Output ""$mb MB liberados""
             }
@@ -120,8 +122,8 @@ public class PerformanceService : IPerformanceService
         try
         {
             var res = await _powerShellRunner.ExecuteCommandAsync(psCleanScript);
-            string output = res.StandardOutput.Trim();
-            if (string.IsNullOrWhiteSpace(output)) output = "Arquivos temporários e lixeira limpos com sucesso.";
+            var lines = res.StandardOutput.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            string output = lines.Length > 0 ? lines[^1] : "Arquivos temporários e lixeira limpos com sucesso.";
             _logger.LogInformation("PerformanceService", $"Limpeza de temporários concluída: {output}");
             return output;
         }

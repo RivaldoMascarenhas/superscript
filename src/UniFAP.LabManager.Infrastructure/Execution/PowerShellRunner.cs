@@ -29,7 +29,10 @@ public class PowerShellRunner
         Action<string>? onOutputLine = null,
         CancellationToken cancellationToken = default)
     {
-        string arguments = $"-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"{command.Replace("\"", "`\"")}\"";
+        string wrappedCommand = "$ProgressPreference = 'SilentlyContinue';\r\n" + command;
+        byte[] bytes = System.Text.Encoding.Unicode.GetBytes(wrappedCommand);
+        string encoded = Convert.ToBase64String(bytes);
+        string arguments = $"-NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand {encoded}";
         return await _processRunner.RunAsync("powershell.exe", arguments, null, 600, onOutputLine, cancellationToken);
     }
 
