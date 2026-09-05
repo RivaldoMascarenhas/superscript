@@ -28,7 +28,8 @@ public class ProcessRunner
         string? workingDirectory = null,
         int timeoutSeconds = 600,
         Action<string>? onOutputLine = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? standardInput = null)
     {
         var stdout = new StringBuilder();
         var stderr = new StringBuilder();
@@ -39,6 +40,8 @@ public class ProcessRunner
             Arguments = arguments,
             WorkingDirectory = workingDirectory ?? Directory.GetCurrentDirectory(),
             UseShellExecute = false,
+            RedirectStandardInput = standardInput != null,
+            StandardInputEncoding = standardInput != null ? new UTF8Encoding(false) : null,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             CreateNoWindow = true,
@@ -74,13 +77,18 @@ public class ProcessRunner
             logArguments = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand [Script PowerShell em memória]";
         }
         _logger.LogInformation("ProcessRunner", $"Iniciando processo: '{fileName}' com argumentos '{logArguments}'");
-        _logger.LogDebug("ProcessRunner", $"Argumentos completos: '{arguments}'");
+        _logger.LogDebug("ProcessRunner", $"Argumentos: '{logArguments}'");
 
         try
         {
             process.Start();
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
+            if (standardInput != null)
+            {
+                await process.StandardInput.WriteAsync(standardInput.AsMemory(), cancellationToken);
+                process.StandardInput.Close();
+            }
 
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var timeoutTask = Task.Delay(TimeSpan.FromSeconds(timeoutSeconds), cts.Token);

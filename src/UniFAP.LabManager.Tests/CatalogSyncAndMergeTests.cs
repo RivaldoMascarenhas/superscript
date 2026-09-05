@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Http;
 using Moq;
 using UniFAP.LabManager.Core.Enums;
 using UniFAP.LabManager.Core.Interfaces;
@@ -47,7 +49,18 @@ public class CatalogSyncAndMergeTests
         };
 
         _configMock.Setup(c => c.SoftwareCatalog).Returns(catalogConfig);
-        _syncService = new CatalogSyncService(_configMock.Object, _logMock.Object);
+        string temp = Path.Combine(Path.GetTempPath(), "UniFAP_Catalog_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(temp, "config"));
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "config", "winutil-applications.json"),
+            Path.Combine(temp, "config", "winutil-applications.json"));
+        _syncService = new CatalogSyncService(_configMock.Object, _logMock.Object,
+            new HttpClient(new OfflineHandler()), temp);
+    }
+
+    private sealed class OfflineHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            => Task.FromResult(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
     }
 
     [Theory]
@@ -108,5 +121,6 @@ public class CatalogSyncAndMergeTests
         // A aplicação não pode quebrar caso GitHub esteja offline ou indisponível
         Assert.True(result.Success);
         Assert.True(result.TotalFinalCount > 0);
+        Assert.True(result.UsedLocalFallback);
     }
 }

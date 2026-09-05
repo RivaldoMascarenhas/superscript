@@ -1,5 +1,5 @@
 using System.IO;
-using System.Security;
+using System.Text.Json;
 using UniFAP.LabManager.Core.Interfaces;
 using UniFAP.LabManager.Infrastructure.Execution;
 using UniFAP.LabManager.Infrastructure.SystemAdapters;
@@ -133,14 +133,6 @@ public class ActiveDirectoryService : IActiveDirectoryService
                 scriptPath = Path.GetFullPath("scripts/AD-Join.ps1");
             }
 
-            // Converter senha para SecureString em memória volátil e descartar texto
-            var securePassword = new SecureString();
-            foreach (char c in password)
-            {
-                securePassword.AppendChar(c);
-            }
-            securePassword.MakeReadOnly();
-
             // Comando PowerShell com PSCredential
             string escapedDomain = domain.Replace("'", "''");
             string escapedUser = username.Replace("'", "''");
@@ -152,30 +144,10 @@ public class ActiveDirectoryService : IActiveDirectoryService
                 (!string.IsNullOrWhiteSpace(ouPath) ? $"-OUPath '{escapedOu}' " : "") +
                 (!string.IsNullOrWhiteSpace(domainController) ? $"-DomainController '{domainController.Replace("'", "''")}' " : "");
 
-            var execResult = await _powerShellRunner.ExecuteCommandAsync(psCommand);
+            var execResult = await _powerShellRunner.ExecuteCommandAsync(psCommand, sensitive: true);
 
-            // Descartar SecureString da memória
-            securePassword.Dispose();
+            return ParseJoinResult(execResult);
 
-            if (execResult.Success || execResult.StandardOutput.Contains("Joined", StringComparison.OrdinalIgnoreCase) || execResult.StandardOutput.Contains("ingressado com sucesso", StringComparison.OrdinalIgnoreCase))
-            {
-                _logger.LogInformation("ActiveDirectoryService", $"Computador ingressado com sucesso no domínio '{domain}'.");
-                return new AdJoinResult
-                {
-                    Success = true,
-                    NeedsReboot = true,
-                    Message = $"Computador ingressado com sucesso no domínio '{domain}'. Reinicialização necessária."
-                };
-            }
-
-            _logger.LogError("ActiveDirectoryService", $"Falha ao ingressar no AD: {execResult.StandardError}");
-            return new AdJoinResult
-            {
-                Success = false,
-                NeedsReboot = false,
-                Message = "Falha ao ingressar no domínio institucional.",
-                ErrorDetails = !string.IsNullOrWhiteSpace(execResult.StandardError) ? execResult.StandardError : execResult.StandardOutput
-            };
         }
         catch (Exception ex)
         {
@@ -189,4 +161,17 @@ public class ActiveDirectoryService : IActiveDirectoryService
             };
         }
     }
+    public static AdJoinResult ParseJoinResult(ProcessExecutionResult execution)
+    {
+        try
+        {
+            string? json = execution.StandardOutput.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                .LastOrDefault(line => line.Trim().StartsWith("{") && line.Trim().EndsWith("}"));
+            var result = json == null ? null : JsonSerializer.Deserialize<AdJoinResult>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (execution.Success && result != null) return result;
+        }
+        catch (JsonException) { }
+        return new AdJoinResult { Success = false, Message = "Resposta invalida ou falha do script de ingresso no dominio.", ErrorDetails = execution.StandardError };
+    }
+
 }

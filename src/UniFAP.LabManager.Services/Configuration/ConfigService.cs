@@ -155,6 +155,10 @@ public class ConfigService : IConfigService
                     Legacy = item.Legacy,
                     IconKey = item.IconKey,
                     EstimatedSeconds = item.EstimatedSeconds,
+                    Hash = item.Hash,
+                    Source = item.Source,
+                    OfficialLink = item.OfficialLink,
+                    Enabled = item.Enabled,
                     IsSelected = true
                 });
             }

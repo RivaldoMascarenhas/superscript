@@ -29,11 +29,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="..\..\config\**\*.*">
+    <None Include="..\..\config\**\*.*">
       <Link>config\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="..\..\themes\**\*.*">
+    <None Include="..\..\themes\**\*.*">
       <Link>themes\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

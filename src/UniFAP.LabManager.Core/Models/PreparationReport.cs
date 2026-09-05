@@ -17,7 +17,12 @@ public class PreparationReport
     public int InstalledCount { get; set; }
     public int WarningCount { get; set; }
     public int ErrorCount { get; set; }
-    public string OverallApproval => ErrorCount > 0 ? "REPROVADO" : (WarningCount > 0 ? "APROVADO COM ADVERTÊNCIAS" : "APROVADO");
+    public bool DryRun { get; set; }
+    public string OverallApproval => Status == JobStatus.Cancelled ? "CANCELADO" :
+        Status == JobStatus.Failed || ErrorCount > 0 ? "REPROVADO" :
+        Status is JobStatus.Pending or JobStatus.Running ? "EM ANDAMENTO" :
+        DryRun ? "SIMULACAO CONCLUIDA - NAO APLICADO" :
+        WarningCount > 0 ? "APROVADO COM ADVERTÊNCIAS" : "APROVADO";
     public List<JobStep> StepResults { get; set; } = new();
     public List<SoftwareItem> SoftwareResults { get; set; } = new();
 }

@@ -75,32 +75,44 @@ public class WindowsConfigurationService : IWindowsConfigurationService
         return info.HasPendingReboot;
     }
 
-    public async Task RequestRebootAsync(int delaySeconds = 10)
+    public async Task<bool> RenameComputerAsync(string name, string? domainUsername, string? domainPassword, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("WindowsConfigurationService", $"Agendando reinicialização do sistema em {delaySeconds} segundos...");
-
-        // Configurar inicialização automática do Agent no RunOnce
-        try
+        if (!System.Text.RegularExpressions.Regex.IsMatch(name, @"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,13}[A-Za-z0-9])?$") || name.All(char.IsDigit))
+            throw new ArgumentException("Nome de computador invalido.", nameof(name));
+        string command = $"Rename-Computer -NewName '{name}' -Force -ErrorAction Stop";
+        if (!string.IsNullOrWhiteSpace(domainUsername) && !string.IsNullOrWhiteSpace(domainPassword))
         {
-            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            string agentPath = Path.Combine(baseDir, "Agent", "UniFAP.LabManager.Agent.exe");
-            if (!File.Exists(agentPath))
-            {
-                agentPath = Path.Combine(baseDir, "UniFAP.LabManager.Agent.exe");
-            }
-
-            if (File.Exists(agentPath))
-            {
-                using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce", true);
-                key?.SetValue("UniFAP_LabManager_Resume", $"\"{agentPath}\"");
-                _logger.LogInformation("WindowsConfigurationService", "Chave RunOnce configurada com sucesso para retomada do Agente.");
-            }
+            command += $" -DomainCredential ([PSCredential]::new('{domainUsername.Replace("'", "''")}', (ConvertTo-SecureString '{domainPassword.Replace("'", "''")}' -AsPlainText -Force)))";
         }
-        catch (Exception ex)
-        {
-            _logger.LogWarning("WindowsConfigurationService", $"Não foi possível gravar chave RunOnce: {ex.Message}");
-        }
+        var result = await _powerShellRunner.ExecuteCommandAsync(command, cancellationToken: cancellationToken, sensitive: true);
+        return result.Success;
+    }
 
-        await _processRunner.RunAsync("shutdown.exe", $"/r /t {delaySeconds} /c \"UniFAP Lab Manager: Reiniciando para concluir a preparação do computador...\"", null, 15);
+    public async Task RequestRebootAsync(int delaySeconds = 10, bool autoResume = true)
+    {
+        string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        string agentPath = Path.Combine(baseDir, "Agent", "UniFAP.LabManager.Agent.exe");
+        if (!File.Exists(agentPath)) agentPath = Path.Combine(baseDir, "UniFAP.LabManager.Agent.exe");
+        if (autoResume && !File.Exists(agentPath))
+            throw new FileNotFoundException("Agente de retomada ausente. Publique o pacote completo antes de reiniciar.", agentPath);
+
+        // Interactive logon preserves the operator's WinGet context; Highest supplies elevation without storing credentials.
+        string registration = autoResume ? $@"
+$ErrorActionPreference = 'Stop'
+$identity = [Security.Principal.WindowsIdentity]::GetCurrent().Name
+$action = New-ScheduledTaskAction -Execute '{agentPath.Replace("'", "''")}' -WorkingDirectory '{baseDir.Replace("'", "''")}'
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User $identity
+$principal = New-ScheduledTaskPrincipal -UserId $identity -LogonType Interactive -RunLevel Highest
+$settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Hours 4) -StartWhenAvailable
+Register-ScheduledTask -TaskName 'UniFAP_LabManager_Resume' -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force | Out-Null
+" : "Unregister-ScheduledTask -TaskName 'UniFAP_LabManager_Resume' -Confirm:$false -ErrorAction SilentlyContinue";
+        var prepared = await _powerShellRunner.ExecuteCommandAsync(registration);
+        if (autoResume && !prepared.Success)
+            throw new InvalidOperationException("Nao foi possivel preparar retomada elevada. Reinicializacao abortada: " + prepared.StandardError);
+
+        using (var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce", true))
+            key?.DeleteValue("UniFAP_LabManager_Resume", false);
+        var reboot = await _processRunner.RunAsync("shutdown.exe", $"/r /t {Math.Max(10, delaySeconds)}", null, 15);
+        if (!reboot.Success) throw new InvalidOperationException("Falha ao agendar reinicializacao: " + reboot.StandardError);
     }
 }

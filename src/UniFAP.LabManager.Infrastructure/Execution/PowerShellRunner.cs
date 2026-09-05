@@ -27,13 +27,17 @@ public class PowerShellRunner
     public async Task<ProcessExecutionResult> ExecuteCommandAsync(
         string command,
         Action<string>? onOutputLine = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool sensitive = false)
     {
-        string wrappedCommand = "$ProgressPreference = 'SilentlyContinue';\r\n" + command;
-        byte[] bytes = System.Text.Encoding.Unicode.GetBytes(wrappedCommand);
+        string wrappedCommand = "[Console]::OutputEncoding = [Text.UTF8Encoding]::new($false); $ProgressPreference = 'SilentlyContinue';\r\n" + command;
+        string executableCommand = sensitive
+            ? "$ErrorActionPreference = 'Stop'; [Console]::InputEncoding = [Text.UTF8Encoding]::new($false); & ([ScriptBlock]::Create([Console]::In.ReadToEnd()))"
+            : wrappedCommand;
+        byte[] bytes = System.Text.Encoding.Unicode.GetBytes(executableCommand);
         string encoded = Convert.ToBase64String(bytes);
         string arguments = $"-NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand {encoded}";
-        return await _processRunner.RunAsync("powershell.exe", arguments, null, 600, onOutputLine, cancellationToken);
+        return await _processRunner.RunAsync("powershell.exe", arguments, null, 600, onOutputLine, cancellationToken, sensitive ? wrappedCommand : null);
     }
 
     public async Task<ProcessExecutionResult> ExecuteScriptFileAsync(

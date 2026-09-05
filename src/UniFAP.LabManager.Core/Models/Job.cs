@@ -22,6 +22,7 @@ public class Job
     public bool AutoResume { get; set; } = true;
     public bool DryRun { get; set; } = false;
     public bool NeedsReboot { get; set; } = false;
+    public DateTime? RebootRequestedAtUtc { get; set; }
     public bool IsResumed { get; set; } = false;
     public string? ErrorMessage { get; set; }
     public string? ExecutionSummary { get; set; }

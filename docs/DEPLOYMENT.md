@@ -77,15 +77,14 @@ Quando uma etapa do Job exige reinicialização do computador (por exemplo, apó
    ```text
    C:\ProgramData\UniFAP\LabManager\active_job_state.json
    ```
-2. O sistema registra a chave de inicialização no Registro:
-   ```text
-   HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce
-   Valor: UniFAP_LabManager_Resume
-   Comando: C:\ProgramData\UniFAP\LabManager\Agent\UniFAP.LabManager.Agent.exe
-   ```
-3. O computador reinicia.
-4. Ao ligar e efetuar o logon, o `UniFAP.LabManager.Agent` detecta o Job ativo, lê a etapa exata onde parou e retoma o provisionamento automaticamente sem intervenção humana.
-5. Ao concluir com êxito, o arquivo `active_job_state.json` é removido e o relatório final é persistido em `Reports/`.
+2. Depois das etapas que consomem credenciais, o sistema registra a tarefa UniFAP_LabManager_Resume no Agendador de Tarefas, com execução elevada no próximo login do mesmo técnico. Nenhuma senha é armazenada na tarefa.
+3. O computador reinicia. A aplicação aborta o reboot se não conseguir preparar a retomada automática solicitada.
+4. No próximo login do técnico, o agente retoma a validação final e a geração do relatório, sem repetir as etapas concluídas. É necessário manter a pasta do pacote disponível.
+5. Ao concluir, o estado ativo e a tarefa agendada são removidos. Histórico e relatórios permanecem disponíveis.
+6. Com reinicialização automática desativada, reinicie manualmente e abra o aplicativo para concluir a validação. Com retomada automática desativada, abra o aplicativo após o reboot.
+
+O relatório final verifica contas locais, privilégios, nome e domínio. A instalação de software é conferida ao término de cada instalador. Simulações não aplicam configurações e seus relatórios são identificados como simulação.
+
 
 ---
 

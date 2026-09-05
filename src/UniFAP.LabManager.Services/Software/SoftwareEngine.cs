@@ -95,6 +95,7 @@ public class SoftwareEngine : ISoftwareCatalogService
 
             return result;
         }
+        catch (OperationCanceledException) { throw; }
         catch (Exception ex)
         {
             _logger.LogError("SoftwareEngine", $"Exceção não tratada durante instalação de '{software.Name}'", ex);

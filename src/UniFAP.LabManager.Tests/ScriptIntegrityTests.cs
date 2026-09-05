@@ -104,7 +104,9 @@ public class ScriptIntegrityTests
     public void PerformanceOptimizeScript_RollbackMode_ExecutesSuccessfully()
     {
         string scriptPath = Path.GetFullPath(Path.Combine(_repoRoot, "scripts", "Performance-Optimize.ps1"));
-        string psCommand = "& '" + scriptPath.Replace("'", "''") + "' -Rollback";
+        string psCommand = "function Test-Path { return $false }; " +
+            "function New-Item { }; function Set-ItemProperty { param($Path,$Name,$Value,[switch]$Force,$ErrorAction) if ($Path -notlike 'HKCU:*' -and $Path -notlike 'HKLM:*') { throw 'unexpected path' } }; " +
+            "& '" + scriptPath.Replace("'", "''") + "' -Rollback";
         string encoded = Convert.ToBase64String(Encoding.Unicode.GetBytes(psCommand));
 
         var psi = new ProcessStartInfo

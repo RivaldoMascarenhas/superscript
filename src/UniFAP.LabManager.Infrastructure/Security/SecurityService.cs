@@ -9,6 +9,7 @@ public class SecurityService : ISecurityService
 {
     private static readonly (Regex Pattern, string Replacement)[] SanitizationRules = new[]
     {
+        (new Regex(@"-EncodedCommand\s+\S+", RegexOptions.IgnoreCase | RegexOptions.Compiled), "-EncodedCommand [REDACTED]"),
         (new Regex(@"(password|pass|senha|secret|credential|pwd)\s*[:=]\s*([^\s,;""']+)", RegexOptions.IgnoreCase | RegexOptions.Compiled), "$1: [REDACTED]"),
         (new Regex(@"-String\s+['""][^'""]+['""]", RegexOptions.IgnoreCase | RegexOptions.Compiled), "-String '[REDACTED]'"),
         (new Regex(@"-(SupportPassword|StudentPassword|SecurePassword|Password)\s+['""]?[^'""]+['""]?", RegexOptions.IgnoreCase | RegexOptions.Compiled), "-$1 [REDACTED]"),
@@ -41,7 +42,9 @@ public class SecurityService : ISecurityService
                 ? Path.GetFullPath(relativeOrAbsolutePath)
                 : Path.GetFullPath(Path.Combine(fullBasePath, relativeOrAbsolutePath));
 
-            return targetPath.StartsWith(fullBasePath, StringComparison.OrdinalIgnoreCase);
+            string relative = Path.GetRelativePath(fullBasePath, targetPath);
+            return !Path.IsPathRooted(relative) && relative != ".." &&
+                   !relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal);
         }
         catch
         {

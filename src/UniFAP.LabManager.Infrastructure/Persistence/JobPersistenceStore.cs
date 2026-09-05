@@ -43,6 +43,13 @@ public class JobPersistenceStore
         }
     }
 
+    public IDisposable? TryAcquireExecutionLease()
+    {
+        EnsureDirectories();
+        try { return new FileStream(Path.Combine(_baseDir, "execution.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None); }
+        catch (IOException) { return null; }
+    }
+
     public async Task SaveActiveJobAsync(Job job)
     {
         try
@@ -51,18 +58,36 @@ public class JobPersistenceStore
             string json = JsonSerializer.Serialize(job, JsonOptions);
 
             // Grava o estado ativo para retomada pós-reboot
-            await File.WriteAllTextAsync(_activeJobStateFile, json);
+            bool terminal = job.Status is UniFAP.LabManager.Core.Enums.JobStatus.Succeeded or
+                UniFAP.LabManager.Core.Enums.JobStatus.Warning or UniFAP.LabManager.Core.Enums.JobStatus.Failed or
+                UniFAP.LabManager.Core.Enums.JobStatus.Cancelled;
+            if (!terminal) await WriteAtomicAsync(_activeJobStateFile, json);
 
             // Grava o histórico individual do job
             string historyFile = Path.Combine(_jobsDir, $"{job.Id}.json");
-            await File.WriteAllTextAsync(historyFile, json);
+            if (!System.Text.RegularExpressions.Regex.IsMatch(job.Id, @"^[A-Za-z0-9_-]+$"))
+                throw new InvalidDataException("Identificador de job invalido.");
+            await WriteAtomicAsync(historyFile, json);
+            if (terminal) ClearActiveJob();
 
             _logger.LogDebug("JobPersistenceStore", $"Job '{job.Id}' salvo com sucesso.");
         }
         catch (Exception ex)
         {
             _logger.LogError("JobPersistenceStore", $"Falha ao salvar Job '{job.Id}'", ex);
+            throw;
         }
+    }
+
+    private static async Task WriteAtomicAsync(string path, string content)
+    {
+        string temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            await File.WriteAllTextAsync(temporary, content);
+            File.Move(temporary, path, true);
+        }
+        finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }
 
     public async Task<Job?> LoadActiveJobAsync()

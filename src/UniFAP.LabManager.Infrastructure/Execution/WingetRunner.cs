@@ -34,7 +34,7 @@ public class WingetRunner : IWingetService
         Action<string>? progressCallback = null,
         CancellationToken cancellationToken = default)
     {
-        string arguments = $"install --id {packageId} --exact --accept-package-agreements --accept-source-agreements --disable-interactivity --ignore-security-hash --force";
+        string arguments = $"install --id {packageId} --exact --accept-package-agreements --accept-source-agreements --disable-interactivity";
         if (silent)
         {
             arguments += " --silent";
@@ -169,7 +169,7 @@ public class WingetRunner : IWingetService
     {
         try
         {
-            var result = await _processRunner.RunAsync("winget.exe", $"list --id {packageId} --exact", null, 30);
+            var result = await _processRunner.RunAsync("winget.exe", $"list --id {packageId} --exact --accept-source-agreements --disable-interactivity", null, 30);
             return result.Success && result.StandardOutput.Contains(packageId, StringComparison.OrdinalIgnoreCase);
         }
         catch

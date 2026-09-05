@@ -127,7 +127,8 @@ public interface IWindowsConfigurationService
     Task<bool> ApplyOptimizationsAsync(bool dryRun = false);
     Task<bool> RepairSystemAsync(bool fullRepair = false, bool dryRun = false, Action<string>? progress = null);
     Task<bool> HasPendingRebootAsync();
-    Task RequestRebootAsync(int delaySeconds = 10);
+    Task RequestRebootAsync(int delaySeconds = 10, bool autoResume = true);
+    Task<bool> RenameComputerAsync(string name, string? domainUsername, string? domainPassword, CancellationToken cancellationToken = default);
 }
 
 public interface IUserService

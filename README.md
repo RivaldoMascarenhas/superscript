@@ -52,7 +52,7 @@ VALIDA E GERA RELATÓRIO
 
 4. **Retomada Autônoma Pós-Reboot (`UniFAP.LabManager.Agent`)**:
    - Persistência contínua do Job em `C:\ProgramData\UniFAP\LabManager\`.
-   - Se uma reinicialização for disparada (pós-ingresso no AD ou instalação de runtime), o agente retoma no exato passo pendente, impedindo reexecuções duplicadas.
+   - Se uma reinicialização for disparada (pós-ingresso no AD ou instalação de runtime), o agente retoma a validação final no próximo login do técnico, por tarefa agendada elevada, sem repetir as etapas concluídas.
 
 5. **Segurança e Zero Hardcoding**:
    - Nenhuma credencial ou senha fica gravada em código, JSON, script ou arquivo de log.
@@ -136,3 +136,7 @@ irm tinyurl.com/labfap | iex
 
 ---
 *Centro Universitário Paraíso - UNIFAP • Setor de Tecnologia da Informação (TI)*
+
+## Validação desta revisão
+
+Consulte [Correções e roteiro de homologação](docs/VALIDATION.md) para conhecer as verificações automatizadas e os cenários que exigem uma estação de laboratório.

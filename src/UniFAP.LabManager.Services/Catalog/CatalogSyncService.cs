@@ -11,7 +11,9 @@ public class CatalogSyncService : ICatalogSyncService
 {
     private readonly IConfigService _configService;
     private readonly ILogService _logger;
-    private static readonly HttpClient HttpClient = new() { Timeout = TimeSpan.FromSeconds(15) };
+    private static readonly HttpClient SharedHttpClient = new() { Timeout = TimeSpan.FromSeconds(15) };
+    private readonly HttpClient _httpClient;
+    private readonly string? _baseDirectory;
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
@@ -19,10 +21,12 @@ public class CatalogSyncService : ICatalogSyncService
         WriteIndented = true
     };
 
-    public CatalogSyncService(IConfigService configService, ILogService logger)
+    public CatalogSyncService(IConfigService configService, ILogService logger, HttpClient? httpClient = null, string? baseDirectory = null)
     {
         _configService = configService;
         _logger = logger;
+        _httpClient = httpClient ?? SharedHttpClient;
+        _baseDirectory = baseDirectory;
     }
 
     public async Task<CatalogSourceConfig> GetCatalogSourceConfigAsync()
@@ -58,15 +62,18 @@ public class CatalogSyncService : ICatalogSyncService
         bool usedFallback = false;
 
         // 1. Tentar obter online se permitido
-        if (forceOnline || !string.IsNullOrWhiteSpace(sourceConfig.WinutilSourceUrl))
+        if (forceOnline && !string.IsNullOrWhiteSpace(sourceConfig.WinutilSourceUrl))
         {
             try
             {
                 _logger.LogInformation("CatalogSyncService", $"Tentando download de {sourceConfig.WinutilSourceUrl}...");
-                var response = await HttpClient.GetAsync(sourceConfig.WinutilSourceUrl, cancellationToken);
+                using var response = await _httpClient.GetAsync(sourceConfig.WinutilSourceUrl, cancellationToken);
                 if (response.IsSuccessStatusCode)
                 {
-                    rawJson = await response.Content.ReadAsStringAsync(cancellationToken);
+                    string downloaded = await response.Content.ReadAsStringAsync(cancellationToken);
+                    var parsed = JsonSerializer.Deserialize<Dictionary<string, WinUtilAppEntry>>(downloaded, JsonOpts);
+                    if (parsed == null || parsed.Count == 0) throw new JsonException("Catalogo online vazio.");
+                    rawJson = downloaded;
                     _logger.LogInformation("CatalogSyncService", "Catálogo oficial WinUtil baixado com sucesso via HTTP.");
                 }
                 else
@@ -74,6 +81,7 @@ public class CatalogSyncService : ICatalogSyncService
                     _logger.LogWarning("CatalogSyncService", $"Download retornou HTTP {(int)response.StatusCode}. Recorrendo a snapshot offline.");
                 }
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
             catch (Exception ex)
             {
                 _logger.LogWarning("CatalogSyncService", $"Falha ao baixar catálogo online ({ex.Message}). Utilizando snapshot local.");
@@ -286,8 +294,9 @@ public class CatalogSyncService : ICatalogSyncService
         };
     }
 
-    private static string ResolveConfigPath(string relativePath)
+    private string ResolveConfigPath(string relativePath)
     {
+        if (_baseDirectory != null) return Path.Combine(_baseDirectory, relativePath);
         string baseDir = AppDomain.CurrentDomain.BaseDirectory;
         string direct = Path.Combine(baseDir, relativePath);
         if (File.Exists(direct)) return direct;
@@ -295,6 +304,13 @@ public class CatalogSyncService : ICatalogSyncService
         string cwdPath = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
         if (File.Exists(cwdPath)) return cwdPath;
 
+        var parent = Directory.GetParent(baseDir);
+        while (parent != null)
+        {
+            string candidate = Path.Combine(parent.FullName, relativePath);
+            if (File.Exists(candidate)) return candidate;
+            parent = parent.Parent;
+        }
         return direct;
     }
 

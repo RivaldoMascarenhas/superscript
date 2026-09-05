@@ -42,7 +42,7 @@ public class UserService : IUserService
             string supportName = usersConfig.TryGetValue("support", out var sup) ? sup.Name : "suporte";
             string studentName = usersConfig.TryGetValue("student", out var stu) ? stu.Name : "aluno";
 
-            string psCommand = $"& '{scriptPath.Replace("'", "''")}' -SupportUserName '{supportName}' -StudentUserName '{studentName}'";
+            string psCommand = $"& '{scriptPath.Replace("'", "''")}' -SupportUserName '{supportName.Replace("'", "''")}' -StudentUserName '{studentName.Replace("'", "''")}'";
             if (!string.IsNullOrWhiteSpace(supportPassword))
             {
                 psCommand += $" -SupportPassword (ConvertTo-SecureString '{supportPassword.Replace("'", "''")}' -AsPlainText -Force)";
@@ -52,7 +52,7 @@ public class UserService : IUserService
                 psCommand += $" -StudentPassword (ConvertTo-SecureString '{studentPassword.Replace("'", "''")}' -AsPlainText -Force)";
             }
 
-            var result = await _powerShellRunner.ExecuteCommandAsync(psCommand);
+            var result = await _powerShellRunner.ExecuteCommandAsync(psCommand, sensitive: true);
             bool isSuccess = result.Success && (
                 result.StandardOutput.Contains("\"Success\":true", StringComparison.OrdinalIgnoreCase) ||
                 result.StandardOutput.Contains("\"Success\": true", StringComparison.OrdinalIgnoreCase) ||
@@ -77,14 +77,14 @@ public class UserService : IUserService
 
     public async Task<bool> IsUserConfiguredAsync(string username)
     {
-        var result = await _powerShellRunner.ExecuteCommandAsync($"Get-LocalUser -Name '{username}' -ErrorAction SilentlyContinue");
-        return result.Success && !string.IsNullOrWhiteSpace(result.StandardOutput);
+        var result = await _powerShellRunner.ExecuteCommandAsync($"(Get-LocalUser -Name '{username.Replace("'", "''")}' -ErrorAction Stop).Enabled");
+        return result.Success && result.StandardOutput.Trim().Equals("True", StringComparison.OrdinalIgnoreCase);
     }
 
     public async Task<bool> IsInAdminGroupAsync(string username)
     {
         var result = await _powerShellRunner.ExecuteCommandAsync(
-            $"(Get-LocalGroupMember -Group 'Administradores' -ErrorAction SilentlyContinue).Name -contains '{username}' -or (Get-LocalGroupMember -Group 'Administrators' -ErrorAction SilentlyContinue).Name -contains '{username}'");
+            $"$u = Get-LocalUser -Name '{username.Replace("'", "''")}' -ErrorAction Stop; @(Get-LocalGroupMember -SID 'S-1-5-32-544' -ErrorAction Stop).SID.Value -contains $u.SID.Value");
         return result.Success && result.StandardOutput.Trim().Equals("True", StringComparison.OrdinalIgnoreCase);
     }
 }

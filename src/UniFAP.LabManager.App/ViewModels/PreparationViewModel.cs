@@ -379,6 +379,8 @@ public class PreparationViewModel : ViewModelBase
 
     private async Task LaunchExecutionAsync(bool dryRun)
     {
+        try
+        {
         // Validar obrigatoriedade de senha do usuário suporte
         if (!dryRun)
         {
@@ -415,7 +417,7 @@ public class PreparationViewModel : ViewModelBase
         {
             // Validar pré-requisitos do AD primeiro
             var adValidation = await _adService.ValidateDomainPreRequisitesAsync(_configService.ActiveDirectory.Domain, _configService.ActiveDirectory.DomainController);
-            if (!adValidation.AlreadyJoined)
+            if (!adValidation.AlreadyJoined || (!string.IsNullOrWhiteSpace(NewComputerName) && !NewComputerName.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase)))
             {
                 if (OnPromptActiveDirectoryCredentials != null)
                 {
@@ -446,9 +448,17 @@ public class PreparationViewModel : ViewModelBase
 
         job.DomainUsername = domainUser;
         job.DomainPasswordText = domainPass;
+        SupportAdminPassword = string.Empty;
+        SupportAdminPasswordConfirm = string.Empty;
 
         _logger.LogInformation("PreparationViewModel", $"Iniciando Job {job.Id} (Perfil: {job.ProfileDisplayName})");
         OnExecutionStarted?.Invoke(job);
-        _ = _jobOrchestrator.StartJobAsync(job);
+        await _jobOrchestrator.StartJobAsync(job);
+        }
+        catch (Exception ex)
+        {
+            ValidationErrorMessage = ex.Message;
+            _logger.LogError("PreparationViewModel", "Nao foi possivel iniciar a preparacao.", ex);
+        }
     }
 }

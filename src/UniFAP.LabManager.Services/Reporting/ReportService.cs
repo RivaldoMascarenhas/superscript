@@ -19,10 +19,10 @@ public class ReportService : IReportService
         Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.CamelCase, allowIntegerValues: true) }
     };
 
-    public ReportService(ILogService logger)
+    public ReportService(ILogService logger, string? reportsDirectory = null)
     {
         _logger = logger;
-        _reportsDir = @"C:\ProgramData\UniFAP\LabManager\Reports";
+        _reportsDir = reportsDirectory ?? @"C:\ProgramData\UniFAP\LabManager\Reports";
         EnsureDirectory();
     }
 
@@ -50,6 +50,7 @@ public class ReportService : IReportService
             StartTime = job.StartedAt ?? job.CreatedAt,
             EndTime = job.CompletedAt ?? DateTime.Now,
             Status = job.Status,
+            DryRun = job.DryRun,
             TotalSoftwareCount = job.SoftwareQueue.Count,
             InstalledCount = job.SoftwareQueue.Count(s => s.Status == SoftwareInstallStatus.Installed),
             WarningCount = job.SoftwareQueue.Count(s => s.Status == SoftwareInstallStatus.Warning) + job.Steps.Count(st => st.Status == StepStatus.Warning),

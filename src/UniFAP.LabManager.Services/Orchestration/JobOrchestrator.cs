@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using UniFAP.LabManager.Core.Enums;
 using UniFAP.LabManager.Core.Interfaces;
 using UniFAP.LabManager.Core.Models;
@@ -72,6 +73,10 @@ public class JobOrchestrator : IJobOrchestrator
         string? supportPassword = null,
         string? newComputerName = null)
     {
+        if (!string.IsNullOrWhiteSpace(newComputerName) &&
+            (!Regex.IsMatch(newComputerName.Trim(), @"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,13}[A-Za-z0-9])?$") ||
+             newComputerName.Trim().All(char.IsDigit)))
+            throw new ArgumentException("Nome do computador: use 1 a 15 letras, numeros ou hifens, sem hifen nas extremidades e nao apenas numeros.", nameof(newComputerName));
         var profile = _configService.GetProfile(profileId);
         string profileName = profile?.DisplayName ?? (computerType == ComputerType.Administrative ? "Administrativo Institucional" : "Laboratório Personalizado");
         bool joinAd = joinDomain ?? ((computerType == ComputerType.Administrative) || (profile?.JoinDomain ?? false));
@@ -91,7 +96,7 @@ public class JobOrchestrator : IJobOrchestrator
         };
 
         // Construir Lista de Softwares
-        if (customSoftwareIds != null && customSoftwareIds.Count > 0)
+        if (customSoftwareIds != null)
         {
             foreach (var id in customSoftwareIds)
             {
@@ -101,7 +106,7 @@ public class JobOrchestrator : IJobOrchestrator
         }
         else
         {
-            job.SoftwareQueue = _configService.GetSoftwareForProfile(profileId) ?? new List<SoftwareItem>();
+            job.SoftwareQueue = (_configService.GetSoftwareForProfile(profileId) ?? new List<SoftwareItem>()).Select(CloneSoftware).ToList();
         }
 
         if (computerType == ComputerType.Administrative)
@@ -181,6 +186,13 @@ public class JobOrchestrator : IJobOrchestrator
             Legacy = original.Legacy,
             IconKey = original.IconKey,
             EstimatedSeconds = original.EstimatedSeconds,
+            Source = original.Source,
+            Hash = original.Hash,
+            Enabled = original.Enabled,
+            OfficialLink = original.OfficialLink,
+            IsOpenSource = original.IsOpenSource,
+            Version = original.Version,
+            ChocoId = original.ChocoId,
             IsSelected = true
         };
     }
@@ -193,21 +205,27 @@ public class JobOrchestrator : IJobOrchestrator
             return false;
         }
 
+        using var lease = _persistenceStore.TryAcquireExecutionLease();
+        if (lease == null)
+        {
+            _logger.LogWarning("JobOrchestrator", "Outra instancia esta executando a preparacao.");
+            return false;
+        }
         CurrentJob = job;
         IsRunning = true;
         _currentCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var token = _currentCts.Token;
 
-        job.StartedAt = DateTime.Now;
-        job.Status = JobStatus.Running;
-        NotifyJobUpdated(job);
-        await SaveJobStateAsync(job);
-
-        _logger.LogInformation("JobOrchestrator", $"Iniciando Job {job.Id} para perfil '{job.ProfileDisplayName}' [DryRun: {job.DryRun}]");
-        EmitLog($"Iniciando preparação do computador: {job.TargetComputerName}...");
-
         try
         {
+            job.StartedAt ??= DateTime.Now;
+            job.Status = JobStatus.Running;
+            NotifyJobUpdated(job);
+            await SaveJobStateAsync(job);
+
+            _logger.LogInformation("JobOrchestrator", $"Iniciando Job {job.Id} para perfil '{job.ProfileDisplayName}' [DryRun: {job.DryRun}]");
+            EmitLog($"Iniciando preparação do computador: {job.TargetComputerName}...");
+
             for (int i = job.CurrentStepIndex; i < job.Steps.Count; i++)
             {
                 if (token.IsCancellationRequested)
@@ -218,6 +236,18 @@ public class JobOrchestrator : IJobOrchestrator
 
                 job.CurrentStepIndex = i;
                 var step = job.Steps[i];
+                if (step.Type == StepType.Report) continue;
+
+                if (step.Type == StepType.Validation && job.NeedsReboot && !job.DryRun)
+                {
+                    job.RebootRequestedAtUtc = DateTime.UtcNow;
+                    await SaveJobStateAsync(job);
+                    if (job.AutoReboot)
+                        await _windowsService.RequestRebootAsync(10, job.AutoResume);
+                    else
+                        EmitLog("Preparacao pausada. Reinicie o Windows e abra o aplicativo para concluir a validacao.");
+                    return true;
+                }
 
                 // RETOMADA PÓS-REBOOT: Não reexecutar etapas já concluídas com sucesso
                 if (step.Status == StepStatus.Succeeded || step.Status == StepStatus.Skipped)
@@ -266,31 +296,36 @@ public class JobOrchestrator : IJobOrchestrator
                 NotifyJobUpdated(job);
                 await SaveJobStateAsync(job);
 
-                // Se uma reinicialização for necessária imediatamente
-                if (job.NeedsReboot && job.AutoReboot && !job.DryRun)
-                {
-                    EmitLog("Reinicialização necessária detectada. Preparando retomada automática pós-reboot...");
-                    job.CurrentStepIndex = i + 1;
-                    await SaveJobStateAsync(job);
-                    await _windowsService.RequestRebootAsync(10);
-                    return true;
-                }
+
             }
 
             if (job.Status != JobStatus.Cancelled && job.Status != JobStatus.Failed)
             {
                 int warningCount = job.Steps.Count(s => s.Status == StepStatus.Warning) + job.SoftwareQueue.Count(sw => sw.Status == SoftwareInstallStatus.Warning);
-                job.Status = warningCount > 0 ? JobStatus.Warning : JobStatus.Succeeded;
+                job.Status = job.Steps.Any(s => s.Status == StepStatus.Failed) ||
+                    job.SoftwareQueue.Any(s => s.Status == SoftwareInstallStatus.Failed && s.Severity == SoftwareSeverity.Critical)
+                    ? JobStatus.Failed : warningCount > 0 ? JobStatus.Warning : JobStatus.Succeeded;
             }
 
             job.CompletedAt = DateTime.Now;
+            var reportStep = job.Steps.FirstOrDefault(s => s.Type == StepType.Report);
+            if (reportStep != null)
+            {
+                reportStep.StartTime = DateTime.Now;
+                reportStep.EndTime = DateTime.Now;
+                reportStep.Status = StepStatus.Succeeded;
+                try { await _reportService.GenerateReportAsync(job); }
+                catch (Exception ex)
+                {
+                    reportStep.Status = StepStatus.Failed;
+                    reportStep.ErrorMessage = ex.Message;
+                    job.Status = JobStatus.Failed;
+                    job.ErrorMessage = "Falha ao gravar o relatorio final: " + ex.Message;
+                }
+                NotifyStepUpdated(reportStep);
+            }
             _logger.LogInformation("JobOrchestrator", $"Job {job.Id} finalizado com status: {job.Status}");
             EmitLog($"=== PROCESSO FINALIZADO: STATUS {job.Status.ToString().ToUpper()} ===");
-
-            if (job.Status == JobStatus.Succeeded || job.Status == JobStatus.Warning)
-            {
-                _persistenceStore.ClearActiveJob();
-            }
 
             NotifyJobUpdated(job);
             await SaveJobStateAsync(job);
@@ -316,6 +351,10 @@ public class JobOrchestrator : IJobOrchestrator
         }
         finally
         {
+            job.SupportPasswordText = null;
+            job.DomainPasswordText = null;
+            _currentCts?.Dispose();
+            _currentCts = null;
             IsRunning = false;
         }
     }
@@ -353,40 +392,27 @@ public class JobOrchestrator : IJobOrchestrator
                         return true;
                     }
                     EmitLog($"Renomeando computador de '{Environment.MachineName}' para '{job.NewComputerName}'...");
-                    var renameProc = new System.Diagnostics.Process
+                    bool renamed = await _windowsService.RenameComputerAsync(job.NewComputerName, job.DomainUsername, job.DomainPasswordText, token);
+                    if (!renamed)
                     {
-                        StartInfo = new System.Diagnostics.ProcessStartInfo
-                        {
-                            FileName = "powershell.exe",
-                            Arguments = $"-NoProfile -Command \"Rename-Computer -NewName '{job.NewComputerName}' -Force -ErrorAction Stop\"",
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true,
-                            UseShellExecute = false,
-                            CreateNoWindow = true
-                        }
-                    };
-                    renameProc.Start();
-                    string renameOutput = await renameProc.StandardOutput.ReadToEndAsync(token);
-                    string renameError = await renameProc.StandardError.ReadToEndAsync(token);
-                    await renameProc.WaitForExitAsync(token);
-                    if (renameProc.ExitCode == 0)
-                    {
-                        job.TargetComputerName = job.NewComputerName;
-                        job.NeedsReboot = true;
-                        step.Details = $"Computador renomeado com sucesso para '{job.NewComputerName}'. A alteração será efetivada após o reboot.";
-                        EmitLog($"Computador renomeado para '{job.NewComputerName}' com sucesso.");
-                        return true;
-                    }
-                    else
-                    {
-                        step.ErrorMessage = $"Falha ao renomear: {renameError}";
+                        step.ErrorMessage = "Falha ao renomear o computador. Consulte o log.";
                         return false;
                     }
+                    job.TargetComputerName = job.NewComputerName;
+                    job.NeedsReboot = true;
+                    step.Details = "Nome alterado; sera efetivado na reinicializacao.";
+                    return true;
 
                 case StepType.Windows:
                     return await _windowsService.ApplyOptimizationsAsync(job.DryRun);
 
                 case StepType.Users:
+                    if (!job.DryRun && string.IsNullOrWhiteSpace(job.SupportPasswordText))
+                    {
+                        step.IsCritical = true;
+                        step.ErrorMessage = "Senha do suporte indisponivel. Inicie uma nova preparacao com as credenciais.";
+                        return false;
+                    }
                     try
                     {
                         return await _userService.ProvisionUsersAsync(job.SupportPasswordText, null, job.DryRun);
@@ -409,18 +435,17 @@ public class JobOrchestrator : IJobOrchestrator
                     return await ExecuteActiveDirectoryStepAsync(job, step, token);
 
                 case StepType.Validation:
-                    await Task.Delay(500, token);
-                    try { await _brandingService.CreateDesktopShortcutsAsync(); } catch { }
-                    return true;
+                    return await ValidatePreparationAsync(job, step, token);
 
                 case StepType.Report:
-                    await _reportService.GenerateReportAsync(job);
+                    // O relatorio e gravado apos calcular o resultado final.
                     return true;
 
                 default:
                     return true;
             }
         }
+        catch (OperationCanceledException) { throw; }
         catch (Exception ex)
         {
             _logger.LogError("JobOrchestrator", $"Erro ao executar etapa '{step.Name}'", ex);
@@ -429,12 +454,43 @@ public class JobOrchestrator : IJobOrchestrator
         }
     }
 
+    private async Task<bool> ValidatePreparationAsync(Job job, JobStep step, CancellationToken token)
+    {
+        if (job.DryRun)
+        {
+            step.Details = "[SIMULACAO] Verificaria usuarios, privilegios, nome e dominio sem modificar o Windows.";
+            return true;
+        }
+        var failures = new List<string>();
+        token.ThrowIfCancellationRequested();
+        string support = _configService.Users.Users.TryGetValue("support", out var sup) ? sup.Name : "suporte";
+        string student = _configService.Users.Users.TryGetValue("student", out var stu) ? stu.Name : "aluno";
+        if (!await _userService.IsUserConfiguredAsync(support) || !await _userService.IsInAdminGroupAsync(support))
+            failures.Add("Conta de suporte ausente, desativada ou sem privilegios administrativos.");
+        if (!await _userService.IsUserConfiguredAsync(student) || await _userService.IsInAdminGroupAsync(student))
+            failures.Add("Conta de aluno ausente, desativada ou com privilegios administrativos indevidos.");
+        if (!string.IsNullOrWhiteSpace(job.NewComputerName) && !Environment.MachineName.Equals(job.NewComputerName, StringComparison.OrdinalIgnoreCase))
+            failures.Add("Nome do computador diferente do solicitado.");
+        if (job.JoinActiveDirectory && (!await _adService.IsDomainJoinedAsync() ||
+            !string.Equals(await _adService.GetCurrentDomainAsync(), _configService.ActiveDirectory.Domain, StringComparison.OrdinalIgnoreCase)))
+            failures.Add("Computador nao ingressou no dominio solicitado.");
+        token.ThrowIfCancellationRequested();
+        if (failures.Count > 0)
+        {
+            step.ErrorMessage = string.Join(" ", failures);
+            step.IsCritical = true;
+            return false;
+        }
+        step.Details = "Usuarios, privilegios, nome e dominio conferidos. Softwares conferidos ao terminar cada instalacao.";
+        return true;
+    }
+
     private async Task<bool> ExecuteSoftwareStepAsync(Job job, JobStep step, CancellationToken token)
     {
         bool allOk = true;
         for (int i = 0; i < job.SoftwareQueue.Count; i++)
         {
-            if (token.IsCancellationRequested) break;
+            token.ThrowIfCancellationRequested();
 
             var sw = job.SoftwareQueue[i];
 
@@ -452,6 +508,13 @@ public class JobOrchestrator : IJobOrchestrator
 
             var result = await _softwareService.InstallAsync(sw, job.DryRun, msg => EmitLog($"   > {msg}"), token);
 
+            token.ThrowIfCancellationRequested();
+            if (result.Success && (result.ExitCode == 3010 || result.ExitCode == 1641)) job.NeedsReboot = true;
+            if (!job.DryRun && result.Status == SoftwareInstallStatus.Installed && !await _softwareService.IsInstalledAsync(sw))
+            {
+                result.Status = sw.Type == SoftwareType.Script || sw.Legacy ? SoftwareInstallStatus.Warning : SoftwareInstallStatus.Failed;
+                result.Message = "O instalador terminou, mas a presenca do software nao foi confirmada.";
+            }
             sw.Status = result.Status;
             sw.ErrorMessage = result.Message;
 
@@ -480,6 +543,9 @@ public class JobOrchestrator : IJobOrchestrator
             NotifyJobUpdated(job);
             await SaveJobStateAsync(job);
         }
+
+        if (job.DryRun) return allOk;
+        token.ThrowIfCancellationRequested();
 
         // Criar atalhos na Área de Trabalho Pública para todos os usuários do computador
         try
@@ -545,6 +611,13 @@ public class JobOrchestrator : IJobOrchestrator
         var job = await _persistenceStore.LoadActiveJobAsync();
         if (job != null && (job.Status == JobStatus.Running || job.Status == JobStatus.Pending))
         {
+            if (job.RebootRequestedAtUtc.HasValue)
+            {
+                var bootTime = DateTime.UtcNow - TimeSpan.FromMilliseconds(Environment.TickCount64);
+                if (bootTime <= job.RebootRequestedAtUtc.Value) return null;
+                job.NeedsReboot = false;
+                job.RebootRequestedAtUtc = null;
+            }
             job.IsResumed = true;
             _logger.LogInformation("JobOrchestrator", $"Detectado Job pendente para retomada pós-reboot: {job.Id}");
             CurrentJob = job;

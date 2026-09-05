@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Ingresso Seguro no Active Directory para o UniFAP Lab Manager.
 .DESCRIPTION
@@ -47,6 +47,17 @@ function Write-JsonResult {
     }
     $output | ConvertTo-Json -Depth 10 -Compress
 }
+
+    # 4. Modo Simulacao (-WhatIf)
+    if ($WhatIf) {
+        Write-JsonResult -Success $true -Message "Simulacao: Ingresso no dominio '$Domain' na OU '$OUPath' seria executado." -Details @{
+            WhatIf = $true
+            Domain = $Domain
+            OUPath = $OUPath
+        }
+        return
+    }
+
 
 try {
     # Suportar conversao automatica caso SecurePassword seja passado como string simples
@@ -116,16 +127,6 @@ try {
         return
     }
 
-    # 4. Modo Simulacao (-WhatIf)
-    if ($WhatIf) {
-        Write-JsonResult -Success $true -Message "Simulacao: Ingresso no dominio '$Domain' na OU '$OUPath' seria executado." -Details @{
-            WhatIf = $true
-            Domain = $Domain
-            OUPath = $OUPath
-        }
-        return
-    }
-
     # 5. Ingressar no Dominio (com credencial segura)
     if ([string]::IsNullOrWhiteSpace($Username) -or ($null -eq $SecurePassword)) {
         Write-JsonResult -Success $false -Message "Credenciais de administrador de dominio nao fornecidas."
@@ -169,6 +170,13 @@ try {
         }
     } catch { }
 
+    $pendingName = (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName').ComputerName
+    if ($pendingName -ine $env:COMPUTERNAME) {
+        $addParams["Options"] = @("JoinWithNewName", "AccountCreate")
+    }
+    if (-not [string]::IsNullOrWhiteSpace($DomainController)) {
+        $addParams["Server"] = $DomainController
+    }
     Add-Computer @addParams
 
     # PÓS-INGRESSO: Configurar permissões locais e políticas de logon do Windows

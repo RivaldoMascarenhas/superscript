@@ -24,7 +24,7 @@ public class WingetInstaller : ISoftwareInstaller
     public bool CanHandle(SoftwareItem software)
     {
         return software.Type == SoftwareType.Winget || 
-               (!string.IsNullOrWhiteSpace(software.WingetId) && software.Type != SoftwareType.Script);
+               (!string.IsNullOrWhiteSpace(software.WingetId) && software.Type == SoftwareType.Winget);
     }
 
     public async Task<SoftwareInstallResult> InstallAsync(

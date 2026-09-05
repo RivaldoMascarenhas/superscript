@@ -13,6 +13,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+Set-Location -LiteralPath $PSScriptRoot
 
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host "   UNIFAP LAB MANAGER - PUBLICACAO E EMPACOTAMENTO        " -ForegroundColor Cyan
@@ -23,7 +24,10 @@ $appDist = Join-Path $distDir "UniFAP-LabManager"
 
 if (Test-Path $appDist) {
     Write-Host "[INFO] Limpando diretorio de distribuicao anterior..." -ForegroundColor Yellow
-    Remove-Item -Path $appDist -Recurse -Force
+    $resolvedDist = [IO.Path]::GetFullPath($appDist)
+    $expectedRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot "dist")) + [IO.Path]::DirectorySeparatorChar
+    if (-not $resolvedDist.StartsWith($expectedRoot, [StringComparison]::OrdinalIgnoreCase)) { throw "Destino de publicacao invalido." }
+    Remove-Item -LiteralPath $resolvedDist -Recurse -Force
 }
 
 New-Item -ItemType Directory -Path $appDist -Force | Out-Null
@@ -35,10 +39,12 @@ $selfContainedArg = if ($SelfContained) { "true" } else { "false" }
 
 Write-Host "[INFO] Publicando UniFAP.LabManager.App..." -ForegroundColor Cyan
 dotnet publish $appProject -c $Configuration -r $Runtime --self-contained $selfContainedArg -o $appDist --nologo
+if ($LASTEXITCODE -ne 0) { throw "Falha ao publicar aplicativo: $LASTEXITCODE" }
 
 Write-Host "[INFO] Publicando UniFAP.LabManager.Agent..." -ForegroundColor Cyan
 $agentDist = Join-Path $appDist "Agent"
 dotnet publish $agentProject -c $Configuration -r $Runtime --self-contained $selfContainedArg -o $agentDist --nologo
+if ($LASTEXITCODE -ne 0) { throw "Falha ao publicar agente: $LASTEXITCODE" }
 
 # Copiar pastas e arquivos de suporte obrigatorios
 Write-Host "[INFO] Copiando arquivos de configuracao, scripts, documentacao e assets institucionais..." -ForegroundColor Cyan
@@ -47,7 +53,8 @@ $dirsToCopy = @("config", "assets", "scripts", "themes", "software", "docs")
 foreach ($dir in $dirsToCopy) {
     if (Test-Path $dir) {
         $dest = Join-Path $appDist $dir
-        Copy-Item -Path $dir -Destination $dest -Recurse -Force
+        New-Item -ItemType Directory -Path $dest -Force | Out-Null
+        Get-ChildItem -LiteralPath $dir | Copy-Item -Destination $dest -Recurse -Force
         Write-Host "   -> Copiado diretorio: $dir" -ForegroundColor Green
     }
 }

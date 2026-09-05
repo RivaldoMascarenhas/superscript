@@ -14,7 +14,8 @@ public class ReportingTests
     [Fact]
     public async Task GenerateReportAsync_ShouldComputeStatisticsAndApproval()
     {
-        var reportService = new ReportService(_loggerMock.Object);
+        var reportService = new ReportService(_loggerMock.Object,
+            Path.Combine(Path.GetTempPath(), "UniFAP_Reports_" + Guid.NewGuid().ToString("N")));
 
         var job = new Job
         {
