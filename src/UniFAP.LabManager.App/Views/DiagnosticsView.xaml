@@ -10,6 +10,7 @@
 
     <UserControl.Resources>
         <conv:BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <conv:BooleanToVisibilityConverter x:Key="InverseBoolToVis" Invert="True" />
         <conv:StepStatusToColorConverter x:Key="StatusToColor" />
         <conv:StepStatusToIconConverter x:Key="StatusToIcon" />
     </UserControl.Resources>
@@ -30,8 +31,19 @@
                 <Button Grid.Column="1" Content="↻ Executar Diagnóstico" Command="{Binding RunDiagnosticsCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" />
             </Grid>
 
+            <!-- ESTADO INICIAL / VAZIO (QUANDO REPORT AINDA É NULO) -->
+            <Border Style="{StaticResource CardPanel}" Padding="32" Margin="0,0,0,18"
+                    Visibility="{Binding Report, Converter={StaticResource InverseBoolToVis}}">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="🩺" FontSize="36" HorizontalAlignment="Center" Margin="0,0,0,10" />
+                    <TextBlock Text="Nenhuma auditoria executada nesta sessão" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,6" />
+                    <TextBlock Text="Clique no botão '↻ Executar Diagnóstico' acima para auditar hardware, sistema, rede, Active Directory e segurança." Foreground="{StaticResource TextSecondaryBrush}" TextAlignment="Center" MaxWidth="550" TextWrapping="Wrap" LineHeight="20" HorizontalAlignment="Center" />
+                </StackPanel>
+            </Border>
+
             <!-- FILTRO DE CATEGORIAS -->
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,18">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,18"
+                          Visibility="{Binding Report, Converter={StaticResource BoolToVis}}">
                 <ItemsControl ItemsSource="{Binding Categories}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>

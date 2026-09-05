@@ -281,6 +281,11 @@ public class PreparationViewModel : ViewModelBase
             }
         }
 
+        foreach (var p in LaboratoryProfiles)
+        {
+            p.IsSelected = IsLaboratoryMode && (p.Id == SelectedProfileId);
+        }
+
         UpdateSelectedSoftwareSummary();
         FilterSoftwareItems();
     }

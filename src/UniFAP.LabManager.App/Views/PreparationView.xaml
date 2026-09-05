@@ -137,7 +137,18 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Width="330" Style="{StaticResource CardPanelClickable}" Margin="0,0,14,14" Padding="16" Cursor="Hand">
+                            <Border Width="330" Margin="0,0,14,14" Padding="16" Cursor="Hand">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource CardPanelClickable}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                                                <Setter Property="BorderThickness" Value="2" />
+                                                <Setter Property="Background" Value="#1E3A8A" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
                                 <Border.InputBindings>
                                     <MouseBinding Gesture="LeftClick" Command="{Binding DataContext.SelectProfileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding Id}" />
                                 </Border.InputBindings>

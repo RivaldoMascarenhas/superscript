@@ -4,17 +4,90 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:UniFAP.LabManager.App.ViewModels"
-             mc:Ignorable="d" d:DesignHeight="750" d:DesignWidth="1100"
+             mc:Ignorable="d" d:DesignHeight="1200" d:DesignWidth="1100"
              d:DataContext="{d:DesignInstance vm:MaintenanceViewModel}">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="28">
         <StackPanel MaxWidth="1100" HorizontalAlignment="Stretch">
 
             <!-- CABEÇALHO -->
-            <TextBlock Text="Manutenção &amp; Ferramentas" Style="{StaticResource TitleHeader}" />
-            <TextBlock Text="Ações individuais e utilitários rápidos para administração permanente do parque de computadores UniFAP." Style="{StaticResource SubtitleHeader}" />
+            <TextBlock Text="Manutenção &amp; Central de Ferramentas de TI" Style="{StaticResource TitleHeader}" />
+            <TextBlock Text="Utilitários rápidos e rotinas automatizadas para resolução imediata de chamados e suporte do parque de computadores UniFAP." Style="{StaticResource SubtitleHeader}" />
 
-            <!-- GRID DE FERRAMENTAS -->
+            <!-- ================= SEÇÃO 1: REDE & CONECTIVIDADE ================= -->
+            <TextBlock Text="🌐 REDE &amp; CONECTIVIDADE" FontSize="15" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" Margin="0,8,0,10" />
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Reset Pilha de Rede -->
+                <Border Grid.Column="0" Style="{StaticResource CardPanel}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="⚡ Reset Completo de Rede" Style="{StaticResource CardTitle}" />
+                            <TextBlock Text="Flush DNS, renovação de DHCP, reset de Winsock, pilha TCP/IP e tabela ARP." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="Resetar Rede" Command="{Binding ResetNetworkStackCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                    </Grid>
+                </Border>
+
+                <!-- Limpar Proxy -->
+                <Border Grid.Column="2" Style="{StaticResource CardPanel}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="🛡️ Redefinir / Limpar Proxy" Style="{StaticResource CardTitle}" />
+                            <TextBlock Text="Reseta proxy WinHTTP e desativa diretivas manuais do Registro para conexão direta." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="Limpar Proxy" Command="{Binding ClearWindowsProxyCommand}" Style="{StaticResource SecondaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Teste de Conectividade e Ping Matrix -->
+            <Border Style="{StaticResource CardPanel}" Margin="0,0,0,14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="🩺 Teste de Conectividade &amp; Ping Matrix" Style="{StaticResource CardTitle}" />
+                        <TextBlock Text="Testa em sequência Gateway Local, Internet Pública (1.1.1.1 e 8.8.8.8), DNS e Portal Web UniFAP." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="Testar Conexão" Command="{Binding TestNetworkConnectivityCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                </Grid>
+            </Border>
+
+            <!-- CONFIGURAR SERVIDORES DNS -->
+            <Border Style="{StaticResource CardPanel}" Margin="0,0,0,24">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                        <TextBlock Text="🌍 Configurar Servidores DNS" Style="{StaticResource CardTitle}" />
+                        <TextBlock Text="Altera os servidores DNS de todos os adaptadores ativos para opções institucionais ou alta velocidade." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding DnsOptions}" SelectedItem="{Binding SelectedDnsOption}" Width="310" VerticalAlignment="Center" Margin="0,0,12,0" />
+                    <Button Grid.Column="2" Content="Aplicar DNS" Command="{Binding ApplyDnsCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+
+            <!-- ================= SEÇÃO 2: SERVIÇOS CRÍTICOS & HELP DESK ================= -->
+            <TextBlock Text="🖨️ SERVIÇOS CRÍTICOS &amp; HELP DESK" FontSize="15" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" Margin="0,8,0,10" />
             <Grid Margin="0,0,0,24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -22,10 +95,237 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- COLUNA ESQUERDA -->
+                <!-- Coluna Esquerda -->
                 <StackPanel Grid.Column="0">
+                    <!-- Spooler de Impressão -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="🖨️ Desbloquear Spooler de Impressão" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Para o serviço, esvazia a fila travada em System32\spool\PRINTERS e reinicia o serviço." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Desbloquear" Command="{Binding RepairPrintSpoolerCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
 
-                    <!-- PAPEL DE PAREDE -->
+                    <!-- Reset Windows Update -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="🔄 Resetar Windows Update" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Interrompe serviços e limpa caches corrompidos em SoftwareDistribution e Catroot2." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Resetar Update" Command="{Binding ResetWindowsUpdateCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <!-- Coluna Direita -->
+                <StackPanel Grid.Column="2">
+                    <!-- Reiniciar Explorer e Áudio -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="⚡ Reiniciar Shell &amp; Áudio" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Reinicia o processo do Windows Explorer (destrava barra/janelas) e o serviço de áudio." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Reiniciar" Command="{Binding RestartShellAndAudioCommand}" Style="{StaticResource SecondaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Reparar Integridade Windows -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="🔧 Reparar Integridade do Windows" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Executa rotina completa de DISM RestoreHealth e SFC Scannow contra corrupções." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Reparar" Command="{Binding RepairWindowsCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <!-- ================= SEÇÃO 3: ACTIVE DIRECTORY, GPO & CONTAS ================= -->
+            <TextBlock Text="🏛️ ACTIVE DIRECTORY, GPO &amp; CONTAS" FontSize="15" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" Margin="0,8,0,10" />
+            <Grid Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Coluna Esquerda -->
+                <StackPanel Grid.Column="0">
+                    <!-- Sincronizar GPO -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="🔄 Sincronizar GPO (gpupdate /force)" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Força atualização imediata de diretivas de grupo de Computador e Usuário sem aguardar ciclo." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Forçar GPO" Command="{Binding SyncGroupPolicyCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Validar AD -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="🌐 Validar Active Directory" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Testa resolução de DNS e conectividade LDAP com o controlador de domínio institucional." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Validar AD" Command="{Binding ValidateDomainCommand}" Style="{StaticResource SecondaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <!-- Coluna Direita -->
+                <StackPanel Grid.Column="2">
+                    <!-- Limpar Credenciais -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="🔑 Limpar Credenciais Salvas (Cofre)" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Remove senhas de rede e domínio salvas no Windows que geram bloqueios em loop de conta." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Limpar Cofre" Command="{Binding ClearCredentialVaultCommand}" Style="{StaticResource SecondaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Provisionar Usuários Locais -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="👤 Provisionar Usuários Locais" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Cria e configura o administrador 'suporte' e o usuário padrão 'aluno' (sem senha)." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Configurar" Command="{Binding ProvisionUsersCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <!-- ================= SEÇÃO 4: ARMAZENAMENTO, ENERGIA & HARDWARE ================= -->
+            <TextBlock Text="💾 ARMAZENAMENTO, ENERGIA &amp; HARDWARE" FontSize="15" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" Margin="0,8,0,10" />
+            <Grid Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Coluna Esquerda -->
+                <StackPanel Grid.Column="0">
+                    <!-- Limpeza de Temporários -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="🧹 Limpeza de Disco &amp; Temporários" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Remove arquivos temporários (%TEMP%, Windows Temp, Prefetch, Lixeira e downloads)." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Limpar Disco" Command="{Binding CleanTempFilesCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Otimizar Armazenamento (TRIM) -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="⚡ Otimização de Armazenamento (TRIM)" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Dispara comando TRIM na unidade C: para recuperação de desempenho de gravação em SSDs." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Otimizar SSD" Command="{Binding OptimizeStorageDriveCommand}" Style="{StaticResource SecondaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <!-- Coluna Direita -->
+                <StackPanel Grid.Column="2">
+                    <!-- Desativar Hibernação -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="🛑 Desativar Hibernação &amp; Fast Startup" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Remove o arquivo hiberfil.sys liberando 8 a 32 GB de SSD e previne corrupções de boot rápido." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Desativar" Command="{Binding DisableHibernationCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Relatório de Bateria -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="🔋 Relatório de Bateria (Laptops)" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Gera relatório detalhado em HTML com histórico de capacidade, ciclos e desgaste da bateria." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Gerar Relatório" Command="{Binding GenerateBatteryReportCommand}" Style="{StaticResource SecondaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <!-- ================= SEÇÃO 5: OTIMIZAÇÕES, LICENÇA & BRANDING ================= -->
+            <TextBlock Text="⚡ SISTEMA, LICENCIAMENTO &amp; IDENTIDADE" FontSize="15" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" Margin="0,8,0,10" />
+            <Grid Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Coluna Esquerda -->
+                <StackPanel Grid.Column="0">
+                    <!-- Papel de Parede -->
                     <Border Style="{StaticResource CardPanel}">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -34,13 +334,13 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="🎨 Papel de Parede Institucional" Style="{StaticResource CardTitle}" />
-                                <TextBlock Text="Aplica o wallpaper oficial da UniFAP e registra informações OEM." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                                <TextBlock Text="Aplica o wallpaper oficial da UniFAP e registra informações OEM institucionais." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
                             </StackPanel>
                             <Button Grid.Column="1" Content="Aplicar" Command="{Binding ApplyWallpaperCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
                         </Grid>
                     </Border>
 
-                    <!-- DESEMPENHO SEGURO -->
+                    <!-- Otimizações de Desempenho -->
                     <Border Style="{StaticResource CardPanel}">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -55,7 +355,7 @@
                         </Grid>
                     </Border>
 
-                    <!-- REVERTER OTIMIZAÇÕES -->
+                    <!-- Reverter Otimizações -->
                     <Border Style="{StaticResource CardPanel}">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -69,72 +369,11 @@
                             <Button Grid.Column="1" Content="Restaurar" Command="{Binding RollbackPerformanceCommand}" Style="{StaticResource SecondaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
                         </Grid>
                     </Border>
-
-                    <!-- LIMPEZA DE DISCO E TEMPORÁRIOS -->
-                    <Border Style="{StaticResource CardPanel}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="🧹 Limpeza de Disco &amp; Temporários" Style="{StaticResource CardTitle}" />
-                                <TextBlock Text="Remove arquivos temporários (%TEMP%, Windows Temp, Prefetch, Lixeira e downloads)." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
-                            </StackPanel>
-                            <Button Grid.Column="1" Content="Limpar" Command="{Binding CleanTempFilesCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
-                        </Grid>
-                    </Border>
                 </StackPanel>
 
-                <!-- COLUNA DIREITA -->
+                <!-- Coluna Direita -->
                 <StackPanel Grid.Column="2">
-
-                    <!-- USUÁRIOS LOCAIS -->
-                    <Border Style="{StaticResource CardPanel}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="👤 Provisionar Usuários Locais" Style="{StaticResource CardTitle}" />
-                                <TextBlock Text="Cria e configura o administrador 'suporte' e o usuário padrão 'aluno'." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
-                            </StackPanel>
-                            <Button Grid.Column="1" Content="Configurar" Command="{Binding ProvisionUsersCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
-                        </Grid>
-                    </Border>
-
-                    <!-- REPARO WINDOWS (DISM + SFC) -->
-                    <Border Style="{StaticResource CardPanel}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="🔧 Reparar Integridade do Windows" Style="{StaticResource CardTitle}" />
-                                <TextBlock Text="Executa rotina completa de DISM RestoreHealth e SFC Scannow para corrigir corrupções." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
-                            </StackPanel>
-                            <Button Grid.Column="1" Content="Reparar" Command="{Binding RepairWindowsCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
-                        </Grid>
-                    </Border>
-
-                    <!-- VALIDAR ACTIVE DIRECTORY -->
-                    <Border Style="{StaticResource CardPanel}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="🌐 Validar Active Directory" Style="{StaticResource CardTitle}" />
-                                <TextBlock Text="Testa resolução de DNS e conectividade LDAP com o controlador institucional." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
-                            </StackPanel>
-                            <Button Grid.Column="1" Content="Testar" Command="{Binding ValidateDomainCommand}" Style="{StaticResource SecondaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
-                        </Grid>
-                    </Border>
-
-                    <!-- OTIMIZAR NAVEGADORES -->
+                    <!-- Otimizar Navegadores -->
                     <Border Style="{StaticResource CardPanel}">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -148,32 +387,53 @@
                             <Button Grid.Column="1" Content="Otimizar" Command="{Binding OptimizeBrowsersCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
                         </Grid>
                     </Border>
+
+                    <!-- Status de Ativação do Windows -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="🔑 Verificar Licença do Windows" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Consulta status do licenciamento (Permanente, KMS institucional ou expiração de licença)." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Checar Licença" Command="{Binding CheckWindowsActivationCommand}" Style="{StaticResource SecondaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Defender e Scan -->
+                    <Border Style="{StaticResource CardPanel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="🛡️ Atualizar Defender &amp; Scan Rápido" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="Atualiza definições de antivírus e dispara varredura rápida de segurança em segundo plano." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Atualizar &amp; Scan" Command="{Binding UpdateDefenderAndScanCommand}" Style="{StaticResource SecondaryButton}" VerticalAlignment="Center" Margin="14,0,0,0" />
+                        </Grid>
+                    </Border>
                 </StackPanel>
             </Grid>
 
-            <!-- CONFIGURAR SERVIDORES DNS -->
-            <Border Style="{StaticResource CardPanel}" Margin="0,0,0,24">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                        <TextBlock Text="🌍 Configurar Servidores DNS" Style="{StaticResource CardTitle}" />
-                        <TextBlock Text="Altera os servidores DNS em todos os adaptadores de rede ativos para opções de alta performance ou institucionais." Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
-                    </StackPanel>
-                    <ComboBox Grid.Column="1" ItemsSource="{Binding DnsOptions}" SelectedItem="{Binding SelectedDnsOption}" Width="320" VerticalAlignment="Center" Margin="0,0,12,0" />
-                    <Button Grid.Column="2" Content="Aplicar DNS" Command="{Binding ApplyDnsCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" />
-                </Grid>
-            </Border>
-
-            <!-- CONSOLE DE SAÍDA DAS FERRAMENTAS -->
-            <Border Style="{StaticResource CardPanel}" Padding="16">
+            <!-- ================= CONSOLE DE SAÍDA DAS FERRAMENTAS ================= -->
+            <Border Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="LOG DE EXECUÇÃO DAS FERRAMENTAS" Style="{StaticResource CardTitle}" FontSize="13" Foreground="{StaticResource PrimaryBrush}" Margin="0,0,0,8" />
-                    <Border Background="#020617" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12" Height="180">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="💻 LOG DE EXECUÇÃO DAS FERRAMENTAS" Style="{StaticResource CardTitle}" FontSize="13" Foreground="{StaticResource PrimaryBrush}" VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Content="Limpar Log" Command="{Binding ClearLogCommand}" Style="{StaticResource SecondaryButton}" Padding="10,4" FontSize="11" />
+                    </Grid>
+
+                    <Border Background="#020617" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12" Height="220">
+                        <ScrollViewer x:Name="MaintenanceLogScrollViewer" VerticalScrollBarVisibility="Auto">
                             <TextBlock Text="{Binding ActionLog}" FontFamily="{StaticResource CodeFont}" FontSize="12" Foreground="#A7F3D0" TextWrapping="Wrap" />
                         </ScrollViewer>
                     </Border>

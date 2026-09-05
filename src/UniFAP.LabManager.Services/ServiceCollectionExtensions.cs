@@ -46,6 +46,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IUserService, UserService>();
         services.AddSingleton<IPerformanceService, PerformanceService>();
         services.AddSingleton<IBrandingService, BrandingService>();
+        services.AddSingleton<ISupportToolsService, SupportToolsService>();
 
         // Modular Software Installers
         services.AddSingleton<ISoftwareInstaller, OfficeInstaller>();

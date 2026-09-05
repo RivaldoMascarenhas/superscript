@@ -12,7 +12,20 @@ public class BooleanToVisibilityConverter : IValueConverter
 
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        bool boolVal = value is bool b && b;
+        bool boolVal = false;
+        if (value is bool b)
+        {
+            boolVal = b;
+        }
+        else if (value is string s)
+        {
+            boolVal = !string.IsNullOrWhiteSpace(s);
+        }
+        else if (value != null)
+        {
+            boolVal = true;
+        }
+
         if (Invert) boolVal = !boolVal;
         return boolVal ? Visibility.Visible : Visibility.Collapsed;
     }

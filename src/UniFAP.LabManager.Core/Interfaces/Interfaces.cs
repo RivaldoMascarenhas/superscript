@@ -204,3 +204,20 @@ public interface IThemeService
     void ApplyTheme(string themeName);
     List<string> GetAvailableThemes();
 }
+
+public interface ISupportToolsService
+{
+    Task<string> ResetNetworkStackAsync(bool dryRun = false);
+    Task<string> ClearWindowsProxyAsync(bool dryRun = false);
+    Task<string> TestNetworkConnectivityAsync(string testHost = "unifap.edu.br", bool dryRun = false);
+    Task<string> RepairPrintSpoolerAsync(bool dryRun = false);
+    Task<string> ResetWindowsUpdateAsync(bool dryRun = false);
+    Task<string> RestartShellAndAudioAsync(bool dryRun = false);
+    Task<string> SyncGroupPolicyAsync(bool dryRun = false);
+    Task<string> ClearCredentialVaultAsync(bool dryRun = false);
+    Task<string> DisableHibernationAsync(bool dryRun = false);
+    Task<string> OptimizeStorageDriveAsync(string driveLetter = "C", bool dryRun = false);
+    Task<string> GenerateBatteryReportAsync(bool dryRun = false);
+    Task<string> CheckWindowsActivationAsync(bool dryRun = false);
+    Task<string> UpdateDefenderAndScanAsync(bool dryRun = false);
+}

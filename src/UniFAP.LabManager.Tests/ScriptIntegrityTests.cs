@@ -34,6 +34,7 @@ public class ScriptIntegrityTests
     [InlineData("scripts/Set-GlobalWallpaperAndShortcuts.ps1")]
     [InlineData("scripts/User-Provision.ps1")]
     [InlineData("scripts/Windows-Repair.ps1")]
+    [InlineData("scripts/Support-Tools.ps1")]
     [InlineData("lab.ps1")]
     [InlineData("Build.ps1")]
     [InlineData("Run.ps1")]
@@ -126,5 +127,34 @@ public class ScriptIntegrityTests
         Assert.Equal(0, process.ExitCode);
         Assert.Contains("\"Success\":true", stdout);
         Assert.Contains("Reversao", stdout);
+    }
+
+    [Fact]
+    public void SupportToolsScript_SimulationMode_ReturnsSuccessJson()
+    {
+        string scriptPath = Path.GetFullPath(Path.Combine(_repoRoot, "scripts", "Support-Tools.ps1"));
+        string psCommand = "& '" + scriptPath.Replace("'", "''") + "' -Action ResetNetworkStack -WhatIf";
+        string encoded = Convert.ToBase64String(Encoding.Unicode.GetBytes(psCommand));
+
+        var psi = new ProcessStartInfo
+        {
+            FileName = "powershell.exe",
+            Arguments = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand " + encoded,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var process = Process.Start(psi);
+        Assert.NotNull(process);
+
+        string stdout = process.StandardOutput.ReadToEnd();
+        string stderr = process.StandardError.ReadToEnd();
+        process.WaitForExit(10000);
+
+        Assert.Equal(0, process.ExitCode);
+        Assert.Contains("\"Success\":true", stdout);
+        Assert.Contains("SIMULACAO", stdout);
     }
 }
