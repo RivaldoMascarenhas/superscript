@@ -68,7 +68,13 @@ public class ProcessRunner
             }
         };
 
-        _logger.LogInformation("ProcessRunner", $"Iniciando processo: '{fileName}' com argumentos '{arguments}'");
+        string logArguments = arguments;
+        if (arguments.Contains("-EncodedCommand"))
+        {
+            logArguments = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand [Script PowerShell em memória]";
+        }
+        _logger.LogInformation("ProcessRunner", $"Iniciando processo: '{fileName}' com argumentos '{logArguments}'");
+        _logger.LogDebug("ProcessRunner", $"Argumentos completos: '{arguments}'");
 
         try
         {
