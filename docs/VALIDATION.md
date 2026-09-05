@@ -12,6 +12,7 @@
 - Relatórios são gerados depois do resultado final. Falha de gravação é exposta como falha do job.
 - Catálogo inicial usa snapshot local. Sincronização online é explícita, admite contingência local e os testes usam HTTP simulado.
 - Publicação interrompe em falhas do dotnet e evita duplicar diretórios de configuração. A verificação de hash do WinGet não é desativada.
+- A tela de Diagnósticos agora disponibiliza botões de correção com 1 clique (Quick Fix / Auto-Remediation) em cada item auditado com pendência (limpeza de disco C:, configuração de DNS institucional, início/reparo de serviços Windows essenciais, elevação de privilégios) e botão de ação em lote para corrigir todos os problemas detectados simultaneamente.
 
 ## Verificações automatizadas
 

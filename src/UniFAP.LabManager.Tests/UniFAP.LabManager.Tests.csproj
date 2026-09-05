@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <UseWPF>true</UseWPF>
     <RootNamespace>UniFAP.LabManager.Tests</RootNamespace>
     <AssemblyName>UniFAP.LabManager.Tests</AssemblyName>
   </PropertyGroup>
@@ -20,12 +21,14 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="System.IO" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\UniFAP.LabManager.Core\UniFAP.LabManager.Core.csproj" />
     <ProjectReference Include="..\UniFAP.LabManager.Services\UniFAP.LabManager.Services.csproj" />
     <ProjectReference Include="..\UniFAP.LabManager.Infrastructure\UniFAP.LabManager.Infrastructure.csproj" />
+    <ProjectReference Include="..\UniFAP.LabManager.App\UniFAP.LabManager.App.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -45,6 +45,8 @@ public class RelayCommand : ICommand
     public bool CanExecute(object? parameter) => _canExecute == null || _canExecute(parameter);
 
     public void Execute(object? parameter) => _execute(parameter);
+
+    public void RaiseCanExecuteChanged() => CommandManager.InvalidateRequerySuggested();
 }
 
 public class AsyncRelayCommand : ICommand
@@ -69,6 +71,8 @@ public class AsyncRelayCommand : ICommand
     }
 
     public bool CanExecute(object? parameter) => !_isExecuting && (_canExecute == null || _canExecute(parameter));
+
+    public void RaiseCanExecuteChanged() => CommandManager.InvalidateRequerySuggested();
 
     public async void Execute(object? parameter)
     {

@@ -183,6 +183,7 @@ public interface IDiagnosticsService
 {
     Task<DiagnosticsReport> RunFullDiagnosticsAsync(CancellationToken cancellationToken = default);
     Task<SystemInfo> CollectSystemInfoAsync();
+    Task<DiagnosticRemediationResult> RemediateCheckAsync(string remediationAction, CancellationToken cancellationToken = default);
 }
 
 public interface IReportService

@@ -28,7 +28,15 @@
                     <TextBlock Text="Diagnóstico do Sistema" Style="{StaticResource TitleHeader}" />
                     <TextBlock Text="Auditoria minuciosa de integridade de hardware, sistema operacional, rede e segurança." Style="{StaticResource SubtitleHeader}" />
                 </StackPanel>
-                <Button Grid.Column="1" Content="↻ Executar Diagnóstico" Command="{Binding RunDiagnosticsCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="{Binding FixableProblemsCount, StringFormat='⚡ Corrigir Todos os Problemas ({0})'}"
+                            Command="{Binding FixAllCommand}"
+                            Style="{StaticResource SuccessButton}"
+                            Margin="0,0,10,0"
+                            Padding="16,10"
+                            Visibility="{Binding HasFixableProblems, Converter={StaticResource BoolToVis}}" />
+                    <Button Content="↻ Executar Diagnóstico" Command="{Binding RunDiagnosticsCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" />
+                </StackPanel>
             </Grid>
 
             <!-- ESTADO INICIAL / VAZIO (QUANDO REPORT AINDA É NULO) -->
@@ -66,9 +74,10 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="32" />
-                                    <ColumnDefinition Width="220" />
+                                    <ColumnDefinition Width="190" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="140" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
 
                                 <!-- STATUS ICON -->
@@ -80,16 +89,36 @@
                                     <TextBlock Text="{Binding Category}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" />
                                 </StackPanel>
 
-                                <!-- MENSAGEM E DICA -->
+                                <!-- MENSAGEM, DICA E FEEDBACK DA REMEDIAÇÃO -->
                                 <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="10,0">
-                                    <TextBlock Text="{Binding Message}" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" />
+                                    <TextBlock Text="{Binding Message}" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
                                     <TextBlock Text="{Binding ResolutionHint, StringFormat='💡 Dica: {0}'}" FontSize="11" Foreground="{StaticResource AccentBrush}" Visibility="{Binding ResolutionHint, Converter={StaticResource BoolToVis}}" Margin="0,2,0,0" />
+                                    <TextBlock Text="{Binding RemediationFeedback}" FontSize="11" Foreground="{StaticResource SuccessBrush}" FontWeight="SemiBold" Visibility="{Binding RemediationFeedback, Converter={StaticResource BoolToVis}}" Margin="0,2,0,0" />
                                 </StackPanel>
 
-                                <!-- VALOR / STATUS -->
-                                <Border Grid.Column="3" Background="{StaticResource SurfaceLightBrush}" CornerRadius="6" Padding="10,4" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <!-- VALOR / STATUS BADGE -->
+                                <Border Grid.Column="3" Background="{StaticResource SurfaceLightBrush}" CornerRadius="6" Padding="10,5" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8,0">
                                     <TextBlock Text="{Binding Value}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
                                 </Border>
+
+                                <!-- BOTÃO DE CORREÇÃO RÁPIDA OU ESTADO CORRIGINDO -->
+                                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <!-- Indicador quando está executando remediação -->
+                                    <Border Background="#1E3A8A" CornerRadius="6" Padding="12,6" Visibility="{Binding IsRemediating, Converter={StaticResource BoolToVis}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="⏳" Margin="0,0,6,0" FontSize="11" />
+                                            <TextBlock Text="Corrigindo..." FontSize="11" FontWeight="SemiBold" Foreground="White" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Botão de Correção com 1 Clique -->
+                                    <Button Content="{Binding RemediationTitle, StringFormat='⚡ {0}'}"
+                                            Command="{Binding FixCommand}"
+                                            Style="{StaticResource PrimaryButton}"
+                                            Padding="14,6"
+                                            FontSize="11"
+                                            Visibility="{Binding ShowRemediationButton, Converter={StaticResource BoolToVis}}" />
+                                </StackPanel>
                             </Grid>
                         </Border>
                     </DataTemplate>
