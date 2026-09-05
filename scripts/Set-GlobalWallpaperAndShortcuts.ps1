@@ -87,7 +87,7 @@ public class WinWallpaper {
 "@ -ErrorAction SilentlyContinue
 
     [WinWallpaper]::SystemParametersInfo(20, 0, $permanentWallpaper, 3) | Out-Null
-    Write-Host "✓ Papel de parede institucional aplicado com sucesso." -ForegroundColor Green
+    Write-Host "[OK] Papel de parede institucional aplicado com sucesso." -ForegroundColor Green
 } else {
     Write-Host "[!] Arquivo de papel de parede não localizado." -ForegroundColor Yellow
 }
@@ -96,7 +96,7 @@ public class WinWallpaper {
 Write-Host "[2/2] Gerando atalhos na Área de Trabalho Pública (C:\Users\Public\Desktop)..." -ForegroundColor Green
 
 $publicDesktop = [Environment]::GetFolderPath("CommonDesktopDirectory")
-if (-not $publicDesktop -or -not (Test-Path $publicDesktop)) {
+if ((-not $publicDesktop) -or (-not (Test-Path $publicDesktop))) {
     $publicDesktop = "C:\Users\Public\Desktop"
 }
 if (-not (Test-Path $publicDesktop)) {

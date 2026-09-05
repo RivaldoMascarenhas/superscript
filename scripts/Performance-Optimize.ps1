@@ -31,59 +31,116 @@ function Write-JsonResult {
         AppliedTweaks = $AppliedTweaks
         Timestamp     = (Get-Date).ToString("o")
     }
-    $output | ConvertTo-Json -Depth 5 -Compress
+    $output | ConvertTo-Json -Depth 10 -Compress
 }
 
 $applied = [System.Collections.Generic.List[string]]::new()
 
 try {
-    # 1. Assegurar diretório de rollback
+    # 1. Assegurar diretorio de rollback
     $rollbackDir = Split-Path -Path $RollbackFile -Parent
     if (-not (Test-Path $rollbackDir)) {
         New-Item -Path $rollbackDir -ItemType Directory -Force | Out-Null
     }
 
     if ($WhatIf) {
-        Write-JsonResult -Success $true -Message "Simulação: Otimizações de desempenho seguro seriam aplicadas sem degradar fontes ou estética." -AppliedTweaks @(
-            "ClearType e Suavização de Fontes Preservados",
-            "Animações e Miniaturas Preservadas",
-            "Desativação de Telemetria e Diagnósticos em Background",
-            "Desativação de Cortana e Dicas do Windows",
-            "Otimização de MenuShowDelay (150ms)",
-            "Ativação do Sensor de Armazenamento (Storage Sense)"
+        Write-JsonResult -Success $true -Message "Simulacao: Otimizacoes de desempenho seguro seriam aplicadas sem degradar fontes ou estetica." -AppliedTweaks @(
+            "ClearType e Suavizacao de Fontes Preservados",
+            "Animacoes e Miniaturas Preservadas",
+            "Desativacao de Telemetria e Diagnosticos em Background",
+            "Desativacao de Cortana e Dicas do Windows",
+            "Otimizacao de MenuShowDelay (150ms)",
+            "Ativacao do Sensor de Armazenamento (Storage Sense)"
         )
         return
     }
 
-    # 2. Preservar ClearType e Efeitos Visuais
+    # 2. Executar Reversao (Rollback) se solicitado
+    if ($Rollback) {
+        $reverted = [System.Collections.Generic.List[string]]::new()
+
+        # Restaurar MenuShowDelay padrao do Windows (400ms)
+        Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "MenuShowDelay" -Value "400" -Force -ErrorAction SilentlyContinue
+        $reverted.Add("MenuShowDelay restaurado para 400ms")
+
+        # Restaurar Telemetria
+        $telemetryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection"
+        if (Test-Path $telemetryPath) {
+            Remove-ItemProperty -Path $telemetryPath -Name "AllowTelemetry" -Force -ErrorAction SilentlyContinue
+            $reverted.Add("Politica de telemetria revertida")
+        }
+
+        # Restaurar Sugestoes de Conteudo
+        $contentDeliveryPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+        if (Test-Path $contentDeliveryPath) {
+            Set-ItemProperty -Path $contentDeliveryPath -Name "SystemPaneSuggestionsEnabled" -Value 1 -Force -ErrorAction SilentlyContinue
+            Set-ItemProperty -Path $contentDeliveryPath -Name "SubscribedContent-338388Enabled" -Value 1 -Force -ErrorAction SilentlyContinue
+            Set-ItemProperty -Path $contentDeliveryPath -Name "SubscribedContent-338389Enabled" -Value 1 -Force -ErrorAction SilentlyContinue
+            Set-ItemProperty -Path $contentDeliveryPath -Name "SubscribedContent-353696Enabled" -Value 1 -Force -ErrorAction SilentlyContinue
+            $reverted.Add("Sugestoes do Windows restauradas")
+        }
+
+        # Restaurar Cortana
+        $cortanaPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search"
+        if (Test-Path $cortanaPath) {
+            Remove-ItemProperty -Path $cortanaPath -Name "AllowCortana" -Force -ErrorAction SilentlyContinue
+            $reverted.Add("Politica de Cortana revertida")
+        }
+
+        # Restaurar Storage Sense
+        $storageSensePath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\StorageSense\Parameters\StoragePolicy"
+        if (Test-Path $storageSensePath) {
+            Remove-ItemProperty -Path $storageSensePath -Name "01" -Force -ErrorAction SilentlyContinue
+            $reverted.Add("Sensor de Armazenamento restaurado")
+        }
+
+        if (Test-Path $RollbackFile) {
+            Remove-Item -Path $RollbackFile -Force -ErrorAction SilentlyContinue
+        }
+
+        Write-JsonResult -Success $true -Message "Reversao de otimizacoes de performance concluida com sucesso." -AppliedTweaks $reverted
+        return
+    }
+
+    # 3. Salvar estado atual antes da aplicacao no arquivo de rollback
+    try {
+        $backupState = @{
+            MenuShowDelay = (Get-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "MenuShowDelay" -ErrorAction SilentlyContinue).MenuShowDelay
+            FontSmoothing = (Get-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "FontSmoothing" -ErrorAction SilentlyContinue).FontSmoothing
+            Timestamp     = (Get-Date).ToString("o")
+        }
+        $backupState | ConvertTo-Json -Depth 10 | Out-File -FilePath $RollbackFile -Encoding UTF8 -Force
+    } catch { }
+
+    # 4. Preservar ClearType e Efeitos Visuais
     # FontSmoothing = 2 (ClearType ativado)
     Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "FontSmoothing" -Value "2" -Force
     Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "FontSmoothingType" -Value 2 -Force
-    $applied.Add("ClearType e Suavização de Fontes Preservados")
+    $applied.Add("ClearType e Suavizacao de Fontes Preservados")
 
-    # MenuShowDelay ajustado para 150ms (resposta rápida sem flicker)
+    # MenuShowDelay ajustado para 150ms (resposta rapida sem flicker)
     Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "MenuShowDelay" -Value "150" -Force
     $applied.Add("MenuShowDelay otimizado para 150ms")
 
-    # 3. Desativar Telemetria Básica e Coleta de Diagnóstico sem afetar Defender / Update
+    # 5. Desativar Telemetria Basica e Coleta de Diagnostico sem afetar Defender / Update
     $telemetryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection"
     if (-not (Test-Path $telemetryPath)) {
         New-Item -Path $telemetryPath -Force | Out-Null
     }
     Set-ItemProperty -Path $telemetryPath -Name "AllowTelemetry" -Value 0 -Force -Type DWord
-    $applied.Add("Telemetria de Diagnósticos Desativada")
+    $applied.Add("Telemetria de Diagnosticos Desativada")
 
-    # 4. Desativar Dicas e Sugestões do Windows
+    # 6. Desativar Dicas e Sugestoes do Windows
     $contentDeliveryPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
     if (Test-Path $contentDeliveryPath) {
         Set-ItemProperty -Path $contentDeliveryPath -Name "SystemPaneSuggestionsEnabled" -Value 0 -Force
         Set-ItemProperty -Path $contentDeliveryPath -Name "SubscribedContent-338388Enabled" -Value 0 -Force
         Set-ItemProperty -Path $contentDeliveryPath -Name "SubscribedContent-338389Enabled" -Value 0 -Force
         Set-ItemProperty -Path $contentDeliveryPath -Name "SubscribedContent-353696Enabled" -Value 0 -Force
-        $applied.Add("Sugestões e propagandas do Windows desativadas")
+        $applied.Add("Sugestoes e propagandas do Windows desativadas")
     }
 
-    # 5. Desativar Cortana em Segundo Plano
+    # 7. Desativar Cortana em Segundo Plano
     $cortanaPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search"
     if (-not (Test-Path $cortanaPath)) {
         New-Item -Path $cortanaPath -Force | Out-Null
@@ -91,7 +148,7 @@ try {
     Set-ItemProperty -Path $cortanaPath -Name "AllowCortana" -Value 0 -Force -Type DWord
     $applied.Add("Cortana em segundo plano desativada")
 
-    # 6. Habilitar Sensor de Armazenamento (Storage Sense) para limpeza automática de temps
+    # 8. Habilitar Sensor de Armazenamento (Storage Sense) para limpeza automatica de temps
     $storageSensePath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\StorageSense\Parameters\StoragePolicy"
     if (-not (Test-Path $storageSensePath)) {
         New-Item -Path $storageSensePath -Force | Out-Null
@@ -99,8 +156,9 @@ try {
     Set-ItemProperty -Path $storageSensePath -Name "01" -Value 1 -Force -Type DWord
     $applied.Add("Sensor de Armazenamento ativado")
 
-    Write-JsonResult -Success $true -Message "Otimizações de performance aplicadas com sucesso." -AppliedTweaks $applied
+    Write-JsonResult -Success $true -Message "Otimizacoes de performance aplicadas com sucesso." -AppliedTweaks $applied
 
 } catch {
-    Write-JsonResult -Success $false -Message "Erro ao aplicar otimizações: $($_.Exception.Message)"
+    $errMsg = $_.Exception.Message
+    Write-JsonResult -Success $false -Message "Erro ao aplicar otimizacoes: $errMsg"
 }

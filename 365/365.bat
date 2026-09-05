@@ -16,41 +16,38 @@ if %errorLevel% NEQ 0 (
     exit /b
 )
 
-:: 1. Tenta obter o caminho exato do Desktop via Registro do Windows (funciona com ou sem OneDrive)
-for /f "usebackq tokens=2,*" %%A in (`reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop 2^>nul`) do (
-    set "RAW_DESKTOP=%%B"
-)
-
-:: Expande variaveis de ambiente caso o registro retorne %USERPROFILE%
-if defined RAW_DESKTOP (
-    call set "USER_DESKTOP=%RAW_DESKTOP%"
-)
-
-:: 2. Fallbacks caso a consulta do registro falhe
-if not defined USER_DESKTOP (
-    if exist "%OneDrive%\Desktop" (
-        set "USER_DESKTOP=%OneDrive%\Desktop"
-    ) else if exist "%OneDriveConsumer%\Desktop" (
-        set "USER_DESKTOP=%OneDriveConsumer%\Desktop"
-    ) else if exist "%OneDriveCommercial%\Desktop" (
-        set "USER_DESKTOP=%OneDriveCommercial%\Desktop"
-    ) else (
-        set "USER_DESKTOP=%USERPROFILE%\Desktop"
+:: 1. Verifica primeiramente se o script esta rodando direto da pasta com os arquivos (%~dp0)
+if exist "%~dp0setup.exe" (
+    set "OFFICE_PATH=%~dp0"
+    if "%OFFICE_PATH:~-1%"=="\" set "OFFICE_PATH=%OFFICE_PATH:~0,-1%"
+) else (
+    :: 2. Tenta obter o caminho exato do Desktop via Registro do Windows (funciona com ou sem OneDrive)
+    for /f "usebackq tokens=2,*" %%A in (`reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop 2^>nul`) do (
+        set "RAW_DESKTOP=%%B"
     )
-)
 
-:: 3. Define e valida o caminho da pasta 365
-set "OFFICE_PATH=%USER_DESKTOP%\365"
+    :: Expande variaveis de ambiente caso o registro retorne %USERPROFILE%
+    if defined RAW_DESKTOP (
+        call set "USER_DESKTOP=%RAW_DESKTOP%"
+    )
 
-:: Se nao estiver no Desktop detectado, verifica se o script ja esta rodando de dentro da pasta 365
-if not exist "%OFFICE_PATH%" (
-    if exist "%~dp0setup.exe" (
-        set "OFFICE_PATH=%~dp0"
-        :: Remove a barra invertida final se existir
-        if "%OFFICE_PATH:~-1%"=="\" set "OFFICE_PATH=%OFFICE_PATH:~0,-1%"
-    ) else (
-        echo ERRO: A pasta "365" nao foi encontrada na Area de Trabalho:
-        echo %USER_DESKTOP%
+    :: Fallbacks caso a consulta do registro falhe
+    if not defined USER_DESKTOP (
+        if exist "%OneDrive%\Desktop" (
+            set "USER_DESKTOP=%OneDrive%\Desktop"
+        ) else if exist "%OneDriveConsumer%\Desktop" (
+            set "USER_DESKTOP=%OneDriveConsumer%\Desktop"
+        ) else if exist "%OneDriveCommercial%\Desktop" (
+            set "USER_DESKTOP=%OneDriveCommercial%\Desktop"
+        ) else (
+            set "USER_DESKTOP=%USERPROFILE%\Desktop"
+        )
+    )
+
+    set "OFFICE_PATH=%USER_DESKTOP%\365"
+
+    if not exist "%OFFICE_PATH%\setup.exe" (
+        echo ERRO: O arquivo setup.exe nao foi encontrado em "%~dp0" nem em "%OFFICE_PATH%".
         pause
         exit /b
     )

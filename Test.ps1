@@ -1,8 +1,8 @@
 <#
 .SYNOPSIS
-    Test.ps1 — Execução oficial de testes unitários do UniFAP Lab Manager.
+    Test.ps1 - Execucao oficial de testes unitarios do UniFAP Lab Manager.
 .DESCRIPTION
-    Executa a suíte de testes xUnit do projeto UniFAP.LabManager.Tests com saída detalhada.
+    Executa a suite de testes xUnit do projeto UniFAP.LabManager.Tests com saida detalhada.
 #>
 [CmdletBinding()]
 param(
@@ -13,7 +13,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "   UNIFAP LAB MANAGER — SUÍTE DE TESTES AUTOMATIZADOS     " -ForegroundColor Cyan
+Write-Host "   UNIFAP LAB MANAGER - SUITE DE TESTES AUTOMATIZADOS     " -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 
 $testProject = "src/UniFAP.LabManager.Tests/UniFAP.LabManager.Tests.csproj"
@@ -29,9 +29,10 @@ Write-Host "[INFO] Disparando runner xUnit..." -ForegroundColor Cyan
 & dotnet $argsList
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "`n[SUCESSO] Todos os testes unitários passaram com êxito!" -ForegroundColor Green
+    Write-Host "`n[SUCESSO] Todos os testes unitarios passaram com exito!" -ForegroundColor Green
 }
 else {
-    Write-Host "`n[FALHA] Um ou mais testes falharam. Verifique os relatórios acima." -ForegroundColor Red
+    Write-Host "`n[FALHA] Um ou mais testes falharam. Verifique os relatorios acima." -ForegroundColor Red
     exit $LASTEXITCODE
 }
+

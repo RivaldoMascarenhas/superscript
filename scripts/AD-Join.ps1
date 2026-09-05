@@ -20,7 +20,7 @@ param(
     [string]$Username,
 
     [Parameter(Mandatory = $false)]
-    [System.Security.SecureString]$SecurePassword,
+    $SecurePassword,
 
     [Parameter(Mandatory = $false)]
     [switch]$ValidateOnly,
@@ -45,24 +45,29 @@ function Write-JsonResult {
         Details     = $Details
         Timestamp   = (Get-Date).ToString("o")
     }
-    $output | ConvertTo-Json -Depth 5 -Compress
+    $output | ConvertTo-Json -Depth 10 -Compress
 }
 
 try {
-    # 1. Verificar se já está no domínio
+    # Suportar conversao automatica caso SecurePassword seja passado como string simples
+    if (($SecurePassword -is [string]) -and (-not [string]::IsNullOrWhiteSpace($SecurePassword))) {
+        $SecurePassword = ConvertTo-SecureString $SecurePassword -AsPlainText -Force
+    }
+
+    # 1. Verificar se ja esta no dominio
     $computerSystem = Get-CimInstance -ClassName Win32_ComputerSystem
     $currentDomain = $computerSystem.Domain
     $partOfDomain = $computerSystem.PartOfDomain
 
     if ($partOfDomain -and ($currentDomain -ieq $Domain)) {
-        Write-JsonResult -Success $true -Message "O computador já está ingressado no domínio $Domain." -Details @{
+        Write-JsonResult -Success $true -Message "O computador ja esta ingressado no dominio $Domain." -Details @{
             CurrentDomain = $currentDomain
             PartOfDomain  = $true
         }
         return
     }
 
-    # 2. Pré-validação de Resolução DNS
+    # 2. Pre-validacao de Resolucao DNS
     $dnsResolved = $false
     try {
         $dnsTest = [System.Net.Dns]::GetHostAddresses($Domain)
@@ -74,7 +79,7 @@ try {
     }
 
     if (-not $dnsResolved) {
-        Write-JsonResult -Success $false -Message "Falha na resolução de DNS para o domínio '$Domain'." -Details @{
+        Write-JsonResult -Success $false -Message "Falha na resolucao de DNS para o dominio '$Domain'." -Details @{
             Domain      = $Domain
             DnsResolved = $false
         }
@@ -94,7 +99,7 @@ try {
         }
 
         if (-not $dcReachable) {
-            Write-JsonResult -Success $false -Message "Não foi possível alcançar o Controlador de Domínio '$DomainController'." -Details @{
+            Write-JsonResult -Success $false -Message "Nao foi possivel alcancar o Controlador de Dominio '$DomainController'." -Details @{
                 DomainController = $DomainController
                 Reachable        = $false
             }
@@ -103,7 +108,7 @@ try {
     }
 
     if ($ValidateOnly) {
-        Write-JsonResult -Success $true -Message "Pré-validação de Active Directory concluída com sucesso." -Details @{
+        Write-JsonResult -Success $true -Message "Pre-validacao de Active Directory concluida com sucesso." -Details @{
             DnsResolved = $true
             DcReachable = $dcReachable
             CurrentDomain = $currentDomain
@@ -111,9 +116,19 @@ try {
         return
     }
 
-    # 4. Ingressar no Domínio (com credencial segura)
+    # 4. Modo Simulacao (-WhatIf)
+    if ($WhatIf) {
+        Write-JsonResult -Success $true -Message "Simulacao: Ingresso no dominio '$Domain' na OU '$OUPath' seria executado." -Details @{
+            WhatIf = $true
+            Domain = $Domain
+            OUPath = $OUPath
+        }
+        return
+    }
+
+    # 5. Ingressar no Dominio (com credencial segura)
     if ([string]::IsNullOrWhiteSpace($Username) -or ($null -eq $SecurePassword)) {
-        Write-JsonResult -Success $false -Message "Credenciais de administrador de domínio não fornecidas."
+        Write-JsonResult -Success $false -Message "Credenciais de administrador de dominio nao fornecidas."
         return
     }
 
@@ -130,13 +145,6 @@ try {
         $addParams["OUPath"] = $OUPath
     }
 
-    if ($WhatIf) {
-        $addParams["WhatIf"] = $true
-        Write-JsonResult -Success $true -Message "Simulação: Ingresso no domínio '$Domain' na OU '$OUPath' seria executado." -Details @{
-            WhatIf = $true
-            Domain = $Domain
-            OUPath = $OUPath
-        }
     # Garantir que o DNS do controlador de domínio esteja configurado nos adaptadores de rede
     try {
         $targetDnsIps = @()
@@ -226,7 +234,8 @@ try {
     }
 
 } catch {
-    Write-JsonResult -Success $false -Message "Erro ao ingressar no Active Directory: $($_.Exception.Message)" -Details @{
-        Error = $_.Exception.Message
+    $errMsg = $_.Exception.Message
+    Write-JsonResult -Success $false -Message "Erro ao ingressar no Active Directory: $errMsg" -Details @{
+        Error = $errMsg
     }
 }

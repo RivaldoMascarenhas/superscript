@@ -44,19 +44,19 @@ function Write-JsonResult {
         UsersConfigured = $UsersConfigured
         Timestamp       = (Get-Date).ToString("o")
     }
-    $output | ConvertTo-Json -Depth 5 -Compress
+    $output | ConvertTo-Json -Depth 10 -Compress
 }
 
 try {
-    if ($SupportPassword -is [string] -and -not [string]::IsNullOrWhiteSpace($SupportPassword)) {
+    if (($SupportPassword -is [string]) -and (-not [string]::IsNullOrWhiteSpace($SupportPassword))) {
         $SupportPassword = ConvertTo-SecureString $SupportPassword -AsPlainText -Force
     }
-    if ($StudentPassword -is [string] -and -not [string]::IsNullOrWhiteSpace($StudentPassword)) {
+    if (($StudentPassword -is [string]) -and (-not [string]::IsNullOrWhiteSpace($StudentPassword))) {
         $StudentPassword = ConvertTo-SecureString $StudentPassword -AsPlainText -Force
     }
 
     if ($WhatIf) {
-        Write-JsonResult -Success $true -Message "Simulação: Usuário '$SupportUserName' (Administrador) e '$StudentUserName' (Sem senha) seriam provisionados." -UsersConfigured @{
+        Write-JsonResult -Success $true -Message "Simulacao: Usuario '$SupportUserName' (Administrador) e '$StudentUserName' (Sem senha) seriam provisionados." -UsersConfigured @{
             SupportUser = $SupportUserName
             StudentUser = $StudentUserName
             WhatIf      = $true
@@ -177,9 +177,10 @@ try {
         cmd.exe /c "net localgroup Administrators $StudentUserName /delete" | Out-Null
     } catch { }
 
-    Write-JsonResult -Success $true -Message "Usuários locais provisionados com sucesso: 'suporte' (Admin) e 'aluno' (Sem senha)." -UsersConfigured $results
+    Write-JsonResult -Success $true -Message "Usuarios locais provisionados com sucesso: 'suporte' (Admin) e 'aluno' (Sem senha)." -UsersConfigured $results
 
 } catch {
-    # Em caso de qualquer imprevisto, registrar aviso mas não abortar a instalação completa
-    Write-JsonResult -Success $true -Message "Provisionamento concluído com observações: $($_.Exception.Message)" -UsersConfigured @{ Notice = $_.Exception.Message }
+    # Em caso de qualquer imprevisto, registrar aviso mas nao abortar a instalacao completa
+    $errMsg = $_.Exception.Message
+    Write-JsonResult -Success $true -Message "Provisionamento concluido com observacoes: $errMsg" -UsersConfigured @{ Notice = $errMsg }
 }
